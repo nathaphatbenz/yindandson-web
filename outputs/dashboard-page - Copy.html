@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - รายการเอกสาร</title>
+  <script>
+    const LOGIN_SESSION_KEY = "yind_dashboard_logged_in";
+    if (sessionStorage.getItem(LOGIN_SESSION_KEY) !== "true") {
+      window.location.replace("login-page.html?redirect=dashboard-page.html");
+    }
+  </script>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #667085;
+      --line: #dde5ef;
+      --primary: #0f766e;
+      --primary-dark: #0b5f59;
+      --danger: #dc2626;
+      --danger-soft: #fee2e2;
+      --success: #047857;
+      --shadow: 0 18px 55px rgba(23, 32, 51, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Noto Sans Thai", "Segoe UI", Tahoma, sans-serif;
+      line-height: 1.5;
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 36px;
+    }
+
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .top-utility {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+
+    .eyebrow {
+      margin: 0 0 3px;
+      color: var(--primary);
+      font-size: 0.82rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .overview {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .overview-item {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      padding-right: 16px;
+      margin-right: 16px;
+      border-right: 1px solid var(--line);
+    }
+
+    .overview-item:last-child { padding-right: 0; margin-right: 0; border-right: 0; }
+
+    .overview-item strong {
+      color: var(--text);
+      font-size: 1.1rem;
+    }
+
+    .workspace {
+      min-width: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--card);
+      box-shadow: 0 8px 20px rgba(23, 32, 51, 0.04);
+    }
+
+    .search {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .folder-size-control {
+      min-width: 228px;
+    }
+
+    .folder-size-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .size-button {
+      min-height: 40px;
+      border: 1px solid #cfd9e6;
+      border-radius: 8px;
+      color: var(--text);
+      background: #fff;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+    }
+
+    .size-button.active {
+      border-color: var(--primary);
+      color: #fff;
+      background: var(--primary);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #344054;
+      font-weight: 700;
+      font-size: 0.84rem;
+    }
+
+    input {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid #ccd6e3;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font: inherit;
+      background: #fff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+      outline: none;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      background: var(--primary);
+      font: inherit;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .button svg {
+      width: 17px;
+      height: 17px;
+      stroke-width: 2.1;
+    }
+
+    .button:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .button.secondary {
+      color: var(--text);
+      background: #eef4f7;
+    }
+
+    .button.secondary:hover {
+      background: #e2ebf0;
+    }
+
+    .button.ghost {
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid #cfd9e6;
+    }
+
+    .button.ghost:hover {
+      color: var(--text);
+      background: #ffffff;
+    }
+
+    .button.danger {
+      background: var(--danger);
+    }
+
+    .button.danger:hover {
+      background: #b91c1c;
+    }
+
+    .status {
+      min-height: 24px;
+      margin: -4px 0 12px;
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: inset 0 1px 0 rgba(23, 32, 51, 0.02);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1040px;
+      table-layout: fixed;
+      background: #fff;
+    }
+
+    th,
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #475467;
+      font-size: 0.78rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    tbody tr:hover {
+      background: #f7fbfa;
+    }
+
+    td {
+      font-size: 0.9rem;
+    }
+
+    td:first-child,
+    td:nth-child(4) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    th:nth-child(n + 5),
+    td:nth-child(n + 5) {
+      text-align: center;
+    }
+
+    .invoice-no {
+      font-weight: 800;
+      color: #0f5f5a;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .action-link,
+    .action-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      border: 1px solid #cfd9e6;
+      border-radius: 8px;
+      padding: 6px 10px;
+      color: var(--text);
+      background: #fff;
+      font: inherit;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .action-button.delete {
+      border-color: #fecaca;
+      color: var(--danger);
+      background: var(--danger-soft);
+    }
+
+    .action-link.receipt {
+      border-color: rgba(15, 118, 110, 0.25);
+      color: var(--primary);
+      background: rgba(15, 118, 110, 0.08);
+    }
+
+    .file-button {
+      min-width: 38px;
+      padding: 7px;
+    }
+
+    .file-icon {
+      position: relative;
+      display: inline-block;
+      width: 16px;
+      height: 20px;
+      border: 2px solid currentColor;
+      border-radius: 3px;
+    }
+
+    .file-icon::before {
+      content: "";
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 7px;
+      height: 7px;
+      border-left: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      background: #fff;
+      transform: rotate(0deg);
+    }
+
+    .folder-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 12px;
+    }
+
+    .folder-view.folder-size-small {
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .folder-view.folder-size-large {
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 18px;
+    }
+
+    .folder-card {
+      position: relative;
+      width: 100%;
+      min-height: 154px;
+      border: 1px solid #d7e1ed;
+      border-radius: 8px;
+      padding: 16px;
+      color: var(--text);
+      background: #ffffff;
+      box-shadow: 0 6px 18px rgba(23, 32, 51, 0.045);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .folder-size-small .folder-card {
+      min-height: 132px;
+      padding: 12px;
+    }
+
+    .folder-size-large .folder-card {
+      min-height: 184px;
+      padding: 20px;
+    }
+
+    .folder-card::before {
+      content: none;
+    }
+
+    .folder-size-small .folder-card::before {
+      top: 13px;
+      left: 12px;
+      width: 52px;
+      height: 15px;
+    }
+
+    .folder-size-large .folder-card::before {
+      top: 20px;
+      left: 20px;
+      width: 78px;
+      height: 22px;
+    }
+
+    .folder-card::after {
+      content: none;
+    }
+
+    .folder-size-small .folder-card::after {
+      top: 23px;
+      left: 12px;
+      right: 12px;
+      height: 31px;
+    }
+
+    .folder-size-large .folder-card::after {
+      top: 34px;
+      left: 20px;
+      right: 20px;
+      height: 48px;
+    }
+
+    .folder-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 16px 34px rgba(15, 118, 110, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .folder-title,
+    .folder-meta {
+      position: static;
+    }
+
+    .folder-title {
+      min-width: 0;
+      margin: 0;
+      font-weight: 900;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .folder-size-small .folder-title {
+      font-size: 0.92rem;
+    }
+
+    .folder-size-large .folder-title {
+      font-size: 1.08rem;
+    }
+
+    .folder-meta {
+      display: grid;
+      gap: 4px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .folder-size-small .folder-meta {
+      font-size: 0.82rem;
+    }
+
+    .folder-size-large .folder-meta {
+      gap: 5px;
+      font-size: 0.96rem;
+    }
+
+    .folder-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .folder-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 30px;
+      border-radius: 6px;
+      color: #744f00;
+      background: #f8d76b;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .folder-count {
+      flex: 0 0 auto;
+      padding: 3px 8px;
+      border-radius: 999px;
+      color: #0f5f5a;
+      background: #e6f5f2;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .folder-number {
+      margin-top: 12px;
+      color: #0f5f5a;
+      font-size: 0.88rem;
+      font-weight: 900;
+    }
+
+    .detail-view {
+      display: none;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--card);
+      box-shadow: 0 8px 20px rgba(23, 32, 51, 0.04);
+    }
+
+    .detail-header {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .detail-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 900;
+    }
+
+    .mobile-list {
+      display: none;
+      gap: 12px;
+    }
+
+    .doc-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .doc-card h2 {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+      letter-spacing: 0;
+    }
+
+    .doc-meta {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 5px;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .doc-meta strong {
+      color: var(--text);
+    }
+
+    .empty {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      min-height: 260px;
+      border: 1px dashed #b9c7d8;
+      border-radius: 8px;
+      padding: 28px;
+      text-align: center;
+      background: #fbfdff;
+    }
+
+    .empty p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .pagination-shell {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.48);
+      z-index: 20;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(420px, 100%);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
+      padding: 22px;
+    }
+
+    .modal h2 {
+      margin: 0 0 10px;
+      font-size: 1.22rem;
+      letter-spacing: 0;
+    }
+
+    .modal p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        width: min(100% - 20px, 680px);
+        padding: 22px 0;
+      }
+
+      .hero,
+      .toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .hero-actions {
+        justify-content: stretch;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      .overview {
+        margin-top: 12px;
+      }
+
+      .overview-item {
+        flex: 1;
+        margin-right: 10px;
+        padding-right: 10px;
+      }
+
+      .top-utility {
+        margin-bottom: 18px;
+      }
+
+      .hero-actions .button {
+        width: 100%;
+      }
+
+      .hero .button,
+      .toolbar .button {
+        width: 100%;
+      }
+
+      .toolbar,
+      .detail-view {
+        padding: 14px;
+      }
+
+      .table-wrap {
+        display: none;
+      }
+
+      .detail-view .mobile-list {
+        display: grid;
+      }
+
+      .folder-view {
+        grid-template-columns: 1fr;
+      }
+
+      .folder-size-control {
+        min-width: 0;
+      }
+
+      .detail-header {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .action-link,
+      .action-button {
+        width: 100%;
+      }
+
+      .pagination-shell {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="top-utility">
+      <button class="button ghost" type="button" id="logoutButton"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
+    </div>
+    <header class="hero">
+      <div>
+        <p class="eyebrow">YinD &amp; Son</p>
+        <h1>Dashboard</h1>
+        <p class="subtitle">รายการเอกสาร</p>
+        <div class="overview" aria-label="สรุปเอกสาร">
+          <span class="overview-item"><strong id="folderCount">0</strong> Folder</span>
+          <span class="overview-item"><strong id="documentCount">0</strong> เอกสาร</span>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <a class="button ghost" href="report-page.html"><i data-lucide="file-text" aria-hidden="true"></i>Report</a>
+        <a class="button" href="create-invoice-page.html">+ สร้าง Invoice</a>
+      </div>
+    </header>
+
+    <section class="workspace" aria-labelledby="documentListTitle">
+      <div class="toolbar">
+        <div class="search">
+          <label for="searchInput">ค้นหาเอกสาร</label>
+          <input id="searchInput" type="search" placeholder="ค้นหาจากชื่อบริษัทลูกค้าหรือหมายเลขเอกสาร">
+        </div>
+        <div class="folder-size-control" aria-label="ขนาดการแสดง Folder">
+          <label>ขนาด Folder</label>
+          <div class="folder-size-buttons">
+            <button class="size-button" type="button" data-folder-size="small">เล็ก</button>
+            <button class="size-button" type="button" data-folder-size="medium">กลาง</button>
+            <button class="size-button" type="button" data-folder-size="large">ใหญ่</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="status" id="statusMessage" aria-live="polite"></div>
+
+      <div class="empty" id="emptyState">
+        <p>ยังไม่มีเอกสารในระบบ</p>
+        <a class="button" href="create-invoice-page.html">สร้างเอกสารแรก</a>
+      </div>
+
+      <div class="folder-view" id="folderView"></div>
+
+      <div class="detail-view" id="detailView">
+        <div class="detail-header" id="detailHeader">
+          <p class="detail-title" id="detailTitle">รายละเอียดเอกสาร</p>
+          <button class="button secondary" type="button" id="backToFolders">กลับไปเลือก Folder</button>
+        </div>
+
+        <div class="table-wrap" id="tableView">
+          <table>
+            <colgroup>
+              <col style="width: 22%">
+              <col style="width: 14%">
+              <col style="width: 12%">
+              <col style="width: 18%">
+              <col style="width: 14%">
+              <col style="width: 6%">
+              <col style="width: 7%">
+              <col style="width: 7%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>ชื่อบริษัทลูกค้า</th>
+                <th>หมายเลขเอกสาร</th>
+                <th>วันที่ออกเอกสาร</th>
+                <th>ประเภทเอกสาร</th>
+                <th>ใบกำกับภาษี</th>
+                <th>ไฟล์</th>
+                <th>แก้ไข</th>
+                <th>ลบ</th>
+              </tr>
+            </thead>
+            <tbody id="documentTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="mobile-list" id="mobileList"></div>
+        <div class="pagination-shell" id="paginationInfo"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
+    <div class="modal">
+      <h2 id="deleteTitle">ยืนยันการลบ</h2>
+      <p>คุณต้องการลบเอกสารนี้หรือไม่?</p>
+      <div class="modal-actions">
+        <button class="button secondary" type="button" id="cancelDelete">ยกเลิก</button>
+        <button class="button danger" type="button" id="confirmDelete">ยืนยันการลบ</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="supabase-invoice-client.js"></script>
+  <script>
+    const INVOICE_STORAGE_KEY = "yind_invoice_documents";
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+    const FOLDER_SIZE_STORAGE_KEY = "yind_dashboard_folder_size";
+    const createInvoiceUrl = "create-invoice-page.html";
+    const paginationState = {
+      page: 1,
+      pageSize: 20,
+      total: 0
+    };
+
+    const searchInput = document.querySelector("#searchInput");
+    const folderCount = document.querySelector("#folderCount");
+    const documentCount = document.querySelector("#documentCount");
+    const folderSizeButtons = Array.from(document.querySelectorAll("[data-folder-size]"));
+    const folderView = document.querySelector("#folderView");
+    const detailView = document.querySelector("#detailView");
+    const detailHeader = document.querySelector("#detailHeader");
+    const detailTitle = document.querySelector("#detailTitle");
+    const backToFolders = document.querySelector("#backToFolders");
+    const logoutButton = document.querySelector("#logoutButton");
+    const tableBody = document.querySelector("#documentTableBody");
+    const mobileList = document.querySelector("#mobileList");
+    const emptyState = document.querySelector("#emptyState");
+    const tableView = document.querySelector("#tableView");
+    const statusMessage = document.querySelector("#statusMessage");
+    const paginationInfo = document.querySelector("#paginationInfo");
+    const deleteModal = document.querySelector("#deleteModal");
+    const cancelDelete = document.querySelector("#cancelDelete");
+    const confirmDelete = document.querySelector("#confirmDelete");
+    const moneyFormatter = new Intl.NumberFormat("th-TH", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    let pendingDeleteId = "";
+    let selectedRecordId = "";
+    let selectedFolderSize = localStorage.getItem(FOLDER_SIZE_STORAGE_KEY) || "medium";
+    let invoiceRecords = [];
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function readInvoiceRecords() {
+      try {
+        const records = JSON.parse(localStorage.getItem(INVOICE_STORAGE_KEY) || "[]");
+        return Array.isArray(records) ? records : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function writeInvoiceRecords(records) {
+      localStorage.setItem(INVOICE_STORAGE_KEY, JSON.stringify(records));
+    }
+
+    function seedSampleRecords() {
+      const existingRecords = readInvoiceRecords();
+      const sampleCompanies = [
+        ["ABC จำกัด", "99/12 ถนนสุขุมวิท แขวงคลองตัน เขตคลองเตย กรุงเทพมหานคร 10110"],
+        ["XYZ จำกัด", "25 อาคารสาทรธานี ถนนสาทรเหนือ แขวงสีลม เขตบางรัก กรุงเทพมหานคร 10500"],
+        ["บริษัท สมาร์ท โซลูชัน จำกัด", "88/8 ถนนพระราม 9 แขวงห้วยขวาง เขตห้วยขวาง กรุงเทพมหานคร 10310"],
+        ["บริษัท นอร์ทสตาร์ เทรดดิ้ง จำกัด", "120 หมู่ 4 ตำบลสุเทพ อำเภอเมืองเชียงใหม่ จังหวัดเชียงใหม่ 50200"],
+        ["บริษัท บลูริเวอร์ ฟู้ดส์ จำกัด", "45/9 ถนนมิตรภาพ ตำบลในเมือง อำเภอเมืองขอนแก่น จังหวัดขอนแก่น 40000"],
+        ["บริษัท กรีนไลน์ โลจิสติกส์ จำกัด", "199/7 ถนนบางนา-ตราด แขวงบางนา เขตบางนา กรุงเทพมหานคร 10260"],
+        ["บริษัท ออเรนจ์ มีเดีย จำกัด", "55/21 ถนนลาดพร้าว แขวงจอมพล เขตจตุจักร กรุงเทพมหานคร 10900"],
+        ["บริษัท ซิลเวอร์ แอดไวซ์ จำกัด", "78/3 ถนนราชดำริ แขวงลุมพินี เขตปทุมวัน กรุงเทพมหานคร 10330"],
+        ["บริษัท ฟาสต์เวิร์ค โปรดักชัน จำกัด", "12/6 ถนนประชาชื่น แขวงวงศ์สว่าง เขตบางซื่อ กรุงเทพมหานคร 10800"],
+        ["บริษัท ไพร์ม เฮลท์แคร์ จำกัด", "33/10 ถนนติวานนท์ ตำบลตลาดขวัญ อำเภอเมืองนนทบุรี จังหวัดนนทบุรี 11000"],
+        ["บริษัท เอเวอร์โกรว์ จำกัด", "66 หมู่ 2 ตำบลบางแก้ว อำเภอบางพลี จังหวัดสมุทรปราการ 10540"],
+        ["บริษัท เมโทร รีเทล จำกัด", "101/4 ถนนพหลโยธิน แขวงสามเสนใน เขตพญาไท กรุงเทพมหานคร 10400"],
+        ["บริษัท แฮปปี้ โฮม ดีไซน์ จำกัด", "9/88 ถนนรัตนาธิเบศร์ ตำบลบางกระสอ อำเภอเมืองนนทบุรี จังหวัดนนทบุรี 11000"],
+        ["บริษัท ซีไซด์ รีสอร์ต จำกัด", "18/5 ถนนเลียบชายหาด ตำบลหัวหิน อำเภอหัวหิน จังหวัดประจวบคีรีขันธ์ 77110"],
+        ["บริษัท อีสเทิร์น ซัพพลาย จำกัด", "44/2 ถนนศรีราชา-หนองค้อ ตำบลสุรศักดิ์ อำเภอศรีราชา จังหวัดชลบุรี 20110"],
+        ["บริษัท เบต้า เทคโนโลยี จำกัด", "77/9 ถนนวิภาวดีรังสิต แขวงสนามบิน เขตดอนเมือง กรุงเทพมหานคร 10210"],
+        ["บริษัท แกรนด์ อีเวนต์ จำกัด", "22/14 ถนนเพชรบุรี แขวงถนนเพชรบุรี เขตราชเทวี กรุงเทพมหานคร 10400"],
+        ["บริษัท มูนไลท์ สตูดิโอ จำกัด", "5/17 ถนนนิมมานเหมินท์ ตำบลสุเทพ อำเภอเมืองเชียงใหม่ จังหวัดเชียงใหม่ 50200"],
+        ["บริษัท โกลด์เด้น ฟาร์ม จำกัด", "89 หมู่ 6 ตำบลหนองบัว อำเภอบ้านค่าย จังหวัดระยอง 21120"],
+        ["บริษัท เพิร์ล แอคเคาน์ติ้ง จำกัด", "140/11 ถนนเจริญกรุง แขวงสาทร เขตสาทร กรุงเทพมหานคร 10120"]
+      ];
+      const descriptions = [
+        "ค่าบริการออกแบบสื่อประชาสัมพันธ์",
+        "ค่าบริการดูแลระบบรายเดือน",
+        "ค่าที่ปรึกษาโครงการ",
+        "ค่าสินค้าและค่าขนส่ง",
+        "ค่าบริการถ่ายภาพสินค้า"
+      ];
+      const sampleRecords = sampleCompanies.map(([name, address], index) => {
+        const number = index + 1;
+        const isReceipt = number % 2 === 0;
+        const quantity = (number % 4) + 1;
+        const unitPrice = 3500 + (number * 850);
+        const subtotal = quantity * unitPrice;
+        const vatAmount = subtotal * 0.07;
+        const grandTotal = subtotal + vatAmount;
+        const day = String(Math.max(1, 17 - index)).padStart(2, "0");
+        const invoiceNumber = `${isReceipt ? "Re." : "INV"}69-${String(number).padStart(3, "0")}-1`;
+
+        return {
+          id: `sample-invoice-${String(number).padStart(3, "0")}`,
+          customer_name: name,
+          invoice_number: invoiceNumber,
+          document_date: `2026-06-${day}`,
+          document_type: isReceipt ? "ใบเสร็จรับเงิน / ใบกำกับภาษี" : "ใบวางบิล / ใบแจ้งหนี้",
+          customer_address: address,
+          tax_id: `${String(number).padStart(2, "0")}0556900000${number}`,
+          items: [
+            {
+              description: descriptions[index % descriptions.length],
+              quantity,
+              unitPrice,
+              amount: subtotal
+            }
+          ],
+          subtotal,
+          vatAmount,
+          grandTotal,
+          created_at: `2026-06-${day}T${String(8 + (index % 8)).padStart(2, "0")}:30:00.000Z`,
+          updated_at: `2026-06-${day}T${String(8 + (index % 8)).padStart(2, "0")}:30:00.000Z`
+        };
+      });
+
+      const existingIds = new Set(existingRecords.map((record) => record.id));
+      const missingSamples = sampleRecords.filter((record) => !existingIds.has(record.id));
+      if (missingSamples.length > 0) {
+        writeInvoiceRecords([...existingRecords, ...missingSamples]);
+      }
+    }
+
+    function formatDisplayDate(value) {
+      if (!value) {
+        return "-";
+      }
+
+      const [year, month, day] = value.split("-");
+      if (!year || !month || !day) {
+        return value;
+      }
+
+      return `${day}/${month}/${year}`;
+    }
+
+    function formatMoney(value) {
+      return moneyFormatter.format(Number(value || 0));
+    }
+
+    function getSortedRecords() {
+      return [...invoiceRecords].sort((a, b) => {
+        const dateA = new Date(a.created_at || 0).getTime();
+        const dateB = new Date(b.created_at || 0).getTime();
+        return dateB - dateA;
+      });
+    }
+
+    async function loadInvoiceRecords() {
+      const keyword = searchInput.value.trim().toLowerCase();
+      const result = await fetchInvoices({
+        keyword,
+        page: paginationState.page,
+        pageSize: paginationState.pageSize
+      });
+
+      invoiceRecords = result.data;
+      paginationState.total = result.count;
+    }
+
+    function getFilteredRecords() {
+      return getSortedRecords();
+    }
+
+    function getPaginatedRecords(records) {
+      return records;
+    }
+
+    function getFolderRecords(records) {
+      const sourceIds = new Set(records.map((record) => record.source_invoice_id).filter(Boolean));
+      return records.filter((record) => {
+        const isInv = String(record.invoice_number || "").toUpperCase().startsWith("INV");
+        return isInv || !record.source_invoice_id && !sourceIds.has(record.id);
+      });
+    }
+
+    function getRecordsInFolder(records, folderId) {
+      return records.filter((record) => record.id === folderId || record.source_invoice_id === folderId);
+    }
+
+    function getEditUrl(id) {
+      return `${createInvoiceUrl}?id=${encodeURIComponent(id)}`;
+    }
+
+    function canCreateReceipt(record) {
+      const isInv = String(record.invoice_number || "").toUpperCase().startsWith("INV");
+      const hasReceiptDocument = invoiceRecords.some((item) => {
+        const isLinkedToThisInv = item.source_invoice_id === record.id;
+        const isReceiptType = item.document_type === "ใบกำกับภาษี / ใบเสร็จรับเงิน"
+          || item.document_type === "ใบเสร็จรับเงิน / ใบกำกับภาษี";
+        return isLinkedToThisInv && isReceiptType;
+      });
+
+      return isInv && !hasReceiptDocument;
+    }
+
+    function getCreateReceiptUrl(id) {
+      return `${createInvoiceUrl}?receiptFrom=${encodeURIComponent(id)}`;
+    }
+
+    function renderCreateReceiptAction(record) {
+      if (!canCreateReceipt(record)) {
+        return "-";
+      }
+
+      return `<a class="action-link receipt" href="${getCreateReceiptUrl(record.id)}">สร้างใบกำกับภาษี</a>`;
+    }
+
+    function applyFolderSize(size) {
+      const safeSize = ["small", "medium", "large"].includes(size) ? size : "medium";
+      selectedFolderSize = safeSize;
+      localStorage.setItem(FOLDER_SIZE_STORAGE_KEY, safeSize);
+      folderView.classList.remove("folder-size-small", "folder-size-medium", "folder-size-large");
+      folderView.classList.add(`folder-size-${safeSize}`);
+      folderSizeButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.folderSize === safeSize);
+      });
+    }
+
+    function renderFolders(records) {
+      folderView.innerHTML = records.map((record) => `
+        <button class="folder-card" type="button" data-folder-id="${escapeHtml(record.id)}">
+          <div class="folder-card-header">
+            <span class="folder-mark" aria-hidden="true">INV</span>
+            <span class="folder-count">${getRecordsInFolder(invoiceRecords, record.id).length} เอกสาร</span>
+          </div>
+          <div class="folder-title">${escapeHtml(record.customer_name)}</div>
+          <div class="folder-number">${escapeHtml(record.invoice_number)}</div>
+          <div class="folder-meta">
+            <span>วันที่ออกเอกสาร: ${escapeHtml(formatDisplayDate(record.document_date))}</span>
+          </div>
+        </button>
+      `).join("");
+    }
+
+    function renderTable(records) {
+      tableBody.innerHTML = records.map((record) => `
+        <tr>
+          <td>${escapeHtml(record.customer_name)}</td>
+          <td class="invoice-no">${escapeHtml(record.invoice_number)}</td>
+          <td>${escapeHtml(formatDisplayDate(record.document_date))}</td>
+          <td>${escapeHtml(record.document_type)}</td>
+          <td>${renderCreateReceiptAction(record)}</td>
+          <td><button class="action-button file-button" type="button" data-file-id="${escapeHtml(record.id)}" aria-label="เปิดไฟล์ PDF" title="เปิดไฟล์ PDF"><span class="file-icon" aria-hidden="true"></span></button></td>
+          <td><a class="action-link" href="${getEditUrl(record.id)}">แก้ไข</a></td>
+          <td><button class="action-button delete" type="button" data-delete-id="${escapeHtml(record.id)}">ลบ</button></td>
+        </tr>
+      `).join("");
+    }
+
+    function renderMobileCards(records) {
+      mobileList.innerHTML = records.map((record) => `
+        <article class="doc-card">
+          <h2>${escapeHtml(record.customer_name)}</h2>
+          <div class="doc-meta">
+            <span>หมายเลขเอกสาร: <strong>${escapeHtml(record.invoice_number)}</strong></span>
+            <span>วันที่ออกเอกสาร: <strong>${escapeHtml(formatDisplayDate(record.document_date))}</strong></span>
+            <span>ประเภทเอกสาร: <strong>${escapeHtml(record.document_type)}</strong></span>
+          </div>
+          <div class="actions">
+            ${canCreateReceipt(record) ? `<a class="action-link receipt" href="${getCreateReceiptUrl(record.id)}">สร้างใบกำกับภาษี</a>` : ""}
+            <button class="action-button file-button" type="button" data-file-id="${escapeHtml(record.id)}" aria-label="เปิดไฟล์ PDF" title="เปิดไฟล์ PDF"><span class="file-icon" aria-hidden="true"></span></button>
+            <a class="action-link" href="${getEditUrl(record.id)}">แก้ไข</a>
+            <button class="action-button delete" type="button" data-delete-id="${escapeHtml(record.id)}">ลบ</button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function buildDashboardPdfHtml(record) {
+      const items = Array.isArray(record.items) && record.items.length > 0 ? record.items : [];
+      const itemRows = items.map((item, index) => `
+        <tr>
+          <td class="center">${index + 1}</td>
+          <td>${escapeHtml(item.description || "")}</td>
+          <td class="right">${escapeHtml(item.quantity || 0)}</td>
+          <td class="right">${formatMoney(item.unitPrice || 0)}</td>
+          <td class="right">${formatMoney(item.amount || 0)}</td>
+        </tr>
+      `).join("");
+
+      return `<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeHtml(record.invoice_number || "document")}</title>
+  <style>
+    @page { size: A4; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #111827; font-family: "Noto Sans Thai", "Tahoma", sans-serif; font-size: 12px; }
+    .sheet { width: 100%; }
+    .header { display: flex; justify-content: space-between; gap: 20px; border-bottom: 2px solid #111827; padding-bottom: 10px; margin-bottom: 12px; }
+    .brand { font-size: 18px; font-weight: 900; }
+    .doc-title { text-align: right; font-size: 18px; font-weight: 900; }
+    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; margin-bottom: 12px; }
+    .box { border: 1px solid #111827; padding: 8px; min-height: 34px; }
+    .label { color: #4b5563; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #111827; padding: 7px; vertical-align: top; }
+    th { background: #f3f4f6; font-weight: 900; text-align: center; }
+    .center { text-align: center; }
+    .right { text-align: right; }
+    .summary { width: 42%; margin-left: auto; margin-top: 10px; }
+    .summary td:first-child { font-weight: 900; background: #f9fafb; }
+    .footer { margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; text-align: center; }
+    .sign { border-top: 1px solid #111827; padding-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="header">
+      <div>
+        <div class="brand">บริษัท ยินดีแอนด์ซันส์ จำกัด</div>
+        <div>Yindee & Sons Co., Ltd.</div>
+      </div>
+      <div>
+        <div class="doc-title">${escapeHtml(record.document_type || "")}</div>
+        <div class="right">${escapeHtml(record.invoice_number || "")}</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="box"><span class="label">ชื่อบริษัทลูกค้า:</span> ${escapeHtml(record.customer_name || "")}</div>
+      <div class="box"><span class="label">วันที่ออกเอกสาร:</span> ${escapeHtml(formatDisplayDate(record.document_date))}</div>
+      <div class="box"><span class="label">เลขประจำตัวผู้เสียภาษี:</span> ${escapeHtml(record.tax_id || "")}</div>
+      <div class="box"><span class="label">หมายเลขเอกสาร:</span> ${escapeHtml(record.invoice_number || "")}</div>
+      <div class="box" style="grid-column: 1 / -1;"><span class="label">ที่อยู่:</span> ${escapeHtml(record.customer_address || "")}</div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 8%;">ลำดับ</th>
+          <th>รายละเอียดรายการ</th>
+          <th style="width: 12%;">จำนวน</th>
+          <th style="width: 16%;">ราคา/หน่วย</th>
+          <th style="width: 18%;">รวมเป็นเงิน</th>
+        </tr>
+      </thead>
+      <tbody>${itemRows || `<tr><td colspan="5" class="center">ไม่มีรายการ</td></tr>`}</tbody>
+    </table>
+    <table class="summary">
+      <tr><td>รวมเงิน</td><td class="right">${formatMoney(record.subtotal)}</td></tr>
+      <tr><td>ภาษีมูลค่าเพิ่ม 7%</td><td class="right">${formatMoney(record.vatAmount)}</td></tr>
+      <tr><td>ยอดเงินสุทธิ</td><td class="right">${formatMoney(record.grandTotal)}</td></tr>
+    </table>
+    <div class="footer">
+      <div class="sign">ผู้จัดทำ</div>
+      <div class="sign">ผู้รับเอกสาร</div>
+    </div>
+  </div>
+</body>
+</html>`;
+    }
+
+    async function openDocumentFile(id) {
+      const fileWindow = window.open(`${createInvoiceUrl}?printId=${encodeURIComponent(id)}`, "_blank");
+      if (!fileWindow) {
+        statusMessage.textContent = "กรุณาอนุญาต popup เพื่อเปิดไฟล์ PDF";
+      }
+    }
+
+    function bindFolderButtons() {
+      document.querySelectorAll("[data-folder-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+          selectedRecordId = button.dataset.folderId;
+          renderDocuments();
+        });
+      });
+    }
+
+    function bindFileButtons() {
+      document.querySelectorAll("[data-file-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+          openDocumentFile(button.dataset.fileId);
+        });
+      });
+    }
+
+    function bindDeleteButtons() {
+      document.querySelectorAll("[data-delete-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+          pendingDeleteId = button.dataset.deleteId;
+          deleteModal.classList.add("open");
+        });
+      });
+    }
+
+    async function renderDocuments() {
+      try {
+        await loadInvoiceRecords();
+        statusMessage.textContent = "";
+      } catch (error) {
+        console.error(error);
+        invoiceRecords = [];
+        statusMessage.textContent = error.message || "โหลดข้อมูลจาก Supabase ไม่สำเร็จ";
+      }
+
+      const filteredRecords = getFilteredRecords();
+      const folderRecords = getPaginatedRecords(getFolderRecords(filteredRecords));
+      const selectedRecord = folderRecords.find((record) => record.id === selectedRecordId);
+      const isDetailMode = Boolean(selectedRecord);
+      const records = isDetailMode ? getRecordsInFolder(filteredRecords, selectedRecord.id) : folderRecords;
+      const hasRecords = folderRecords.length > 0;
+
+      folderCount.textContent = String(folderRecords.length);
+      documentCount.textContent = String(filteredRecords.length);
+
+      emptyState.style.display = hasRecords ? "none" : "flex";
+      folderView.style.display = hasRecords && !isDetailMode ? "grid" : "none";
+      detailView.style.display = hasRecords && isDetailMode ? "block" : "none";
+      detailHeader.style.display = hasRecords && isDetailMode ? "flex" : "none";
+      tableView.style.display = hasRecords && isDetailMode ? "" : "none";
+      mobileList.style.display = hasRecords && isDetailMode ? "" : "none";
+
+      renderFolders(records);
+      renderTable(records);
+      renderMobileCards(records);
+      bindFolderButtons();
+      bindFileButtons();
+      bindDeleteButtons();
+
+      detailTitle.textContent = selectedRecord
+        ? `${selectedRecord.customer_name || "-"} | ${selectedRecord.invoice_number || "-"}`
+        : "รายละเอียดเอกสาร";
+
+      paginationInfo.textContent = hasRecords && !isDetailMode
+        ? `แสดง ${records.length} Folder จาก ${folderRecords.length} Folder`
+        : "";
+    }
+
+    async function deleteRecord(id) {
+      try {
+        await deleteInvoice(id);
+        if (selectedRecordId === id) {
+          selectedRecordId = "";
+        }
+        statusMessage.textContent = "ลบเอกสารเรียบร้อย";
+        window.setTimeout(() => {
+          statusMessage.textContent = "";
+        }, 2500);
+        renderDocuments();
+      } catch (error) {
+        console.error(error);
+        statusMessage.textContent = error.message || "ลบเอกสารไม่สำเร็จ";
+      }
+    }
+
+    searchInput.addEventListener("input", () => {
+      paginationState.page = 1;
+      selectedRecordId = "";
+      renderDocuments();
+    });
+
+    folderSizeButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        applyFolderSize(button.dataset.folderSize);
+      });
+    });
+
+    backToFolders.addEventListener("click", () => {
+      selectedRecordId = "";
+      renderDocuments();
+    });
+
+    logoutButton.addEventListener("click", () => {
+      sessionStorage.removeItem(LOGIN_SESSION_KEY);
+      window.location.href = "login-page.html";
+    });
+
+    cancelDelete.addEventListener("click", () => {
+      pendingDeleteId = "";
+      deleteModal.classList.remove("open");
+    });
+
+    deleteModal.addEventListener("click", (event) => {
+      if (event.target === deleteModal) {
+        pendingDeleteId = "";
+        deleteModal.classList.remove("open");
+      }
+    });
+
+    confirmDelete.addEventListener("click", async () => {
+      if (pendingDeleteId) {
+        await deleteRecord(pendingDeleteId);
+      }
+      pendingDeleteId = "";
+      deleteModal.classList.remove("open");
+    });
+
+    applyFolderSize(selectedFolderSize);
+    renderDocuments();
+  </script>
+</body>
+</html>
