@@ -56,6 +56,7 @@
     h2 { margin: 0; font-size: 1.1rem; letter-spacing: 0; }
     .section-head p { margin: 3px 0 0; color: var(--muted); font-size: 0.88rem; }
     .table-scroll { overflow: auto; }
+    .work-table-scroll { max-height: min(68vh, 760px); overflow: auto; }
     table { width: 100%; border-collapse: collapse; }
     th, td { border-bottom: 1px solid var(--line); padding: 9px; vertical-align: top; text-align: left; }
     th { color: #475467; background: #f8fafc; font-size: 0.84rem; font-weight: 900; white-space: nowrap; }
@@ -135,7 +136,7 @@
           <p id="workPeriod"></p>
         </div>
       </div>
-      <div class="table-scroll">
+      <div class="table-scroll work-table-scroll">
         <table class="work-table">
           <thead><tr id="vehicleWorkHead"></tr></thead>
           <tbody id="vehicleWorkBody"></tbody>
