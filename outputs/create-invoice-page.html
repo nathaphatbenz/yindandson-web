@@ -636,6 +636,7 @@
         <a class="nav-link" href="dashboard-page.html"><i data-lucide="layout-dashboard" aria-hidden="true"></i>Dashboard</a>
         <a class="nav-link active" href="create-invoice-page.html" aria-current="page"><i data-lucide="file-plus-2" aria-hidden="true"></i>Create Invoice</a>
         <a class="nav-link" href="report-page.html"><i data-lucide="file-text" aria-hidden="true"></i>Report</a>
+        <a class="nav-link" href="monthly-work-page.html"><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
         <a class="nav-link" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>Work List</a>
       </nav>
     </header>
@@ -2061,7 +2062,24 @@
           return;
         }
         statusText.textContent = "กำลังบันทึกเอกสาร...";
-        await saveInvoiceRecord();
+        const savedRecord = await saveInvoiceRecord();
+        if (!editingInvoiceId) {
+          try {
+            await sendLineDocumentNotification({
+              document_type: savedRecord.document_type,
+              document_number: savedRecord.invoice_number,
+              reference_document_number: isReceiptDocument(savedRecord.document_type)
+                ? currentSourceInvoiceNumber || "-"
+                : "",
+              customer_name: savedRecord.customer_name,
+              document_date: savedRecord.document_date,
+              grand_total: savedRecord.grandTotal,
+              document_status: savedRecord.document_status
+            });
+          } catch (notificationError) {
+            console.warn("LINE notification was not sent.", notificationError);
+          }
+        }
         statusText.textContent = editingInvoiceId ? "บันทึกการแก้ไขเรียบร้อย" : "บันทึกเอกสารเรียบร้อย";
         openPdfPrintPreview();
         sessionStorage.setItem("yind_dashboard_notice", editingInvoiceId ? "บันทึกการแก้ไขเอกสารเรียบร้อย" : "บันทึกเอกสารเรียบร้อย");

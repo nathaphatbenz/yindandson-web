@@ -205,6 +205,79 @@ async function fetchInvoiceNumberById(id) {
   return record.invoice_number || "";
 }
 
+async function sendLineDocumentNotification(document) {
+  const client = requireSupabaseClient();
+  const { data, error } = await client.auth.getSession();
+  const accessToken = data.session?.access_token;
+  if (error || !accessToken) {
+    throw new Error("No authenticated session for LINE notification.");
+  }
+
+  const response = await fetch("/api/send-line-notification", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`
+    },
+    body: JSON.stringify(document)
+  });
+
+  if (!response.ok) {
+    throw new Error("LINE notification request failed.");
+  }
+}
+
+async function fetchMonthlyWorkData({ month, year }) {
+  const client = requireSupabaseClient();
+  const filters = (query) => query.eq("work_month", month).eq("work_year", year);
+  const [vehicleResult, employeeResult, sharedVehicleResult] = await Promise.all([
+    filters(client.from("monthly_vehicle_work_logs").select("*").order("work_date", { ascending: true })),
+    filters(client.from("monthly_employee_withdrawals").select("*").order("withdrawal_date", { ascending: true })),
+    filters(client.from("monthly_shared_vehicle_withdrawals").select("*").order("withdrawal_date", { ascending: true }))
+  ]);
+
+  const error = vehicleResult.error || employeeResult.error || sharedVehicleResult.error;
+  if (error) {
+    throw error;
+  }
+
+  return {
+    vehicleLogs: vehicleResult.data || [],
+    employeeWithdrawals: employeeResult.data || [],
+    sharedVehicleWithdrawals: sharedVehicleResult.data || []
+  };
+}
+
+async function saveMonthlyWorkData({ month, year, vehicleLogs, employeeWithdrawals, sharedVehicleWithdrawals }) {
+  const client = requireSupabaseClient();
+  const clearMonth = (tableName) => client
+    .from(tableName)
+    .delete()
+    .eq("work_month", month)
+    .eq("work_year", year);
+
+  const clearResults = await Promise.all([
+    clearMonth("monthly_vehicle_work_logs"),
+    clearMonth("monthly_employee_withdrawals"),
+    clearMonth("monthly_shared_vehicle_withdrawals")
+  ]);
+  const clearError = clearResults.map((result) => result.error).find(Boolean);
+  if (clearError) {
+    throw clearError;
+  }
+
+  const inserts = [];
+  if (vehicleLogs.length) inserts.push(client.from("monthly_vehicle_work_logs").insert(vehicleLogs));
+  if (employeeWithdrawals.length) inserts.push(client.from("monthly_employee_withdrawals").insert(employeeWithdrawals));
+  if (sharedVehicleWithdrawals.length) inserts.push(client.from("monthly_shared_vehicle_withdrawals").insert(sharedVehicleWithdrawals));
+
+  const insertResults = await Promise.all(inserts);
+  const insertError = insertResults.map((result) => result.error).find(Boolean);
+  if (insertError) {
+    throw insertError;
+  }
+}
+
 async function hasLinkedReceiptDocument(sourceInvoiceId) {
   if (!sourceInvoiceId) {
     return false;

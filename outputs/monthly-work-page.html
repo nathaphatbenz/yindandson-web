@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monthly Work - YinD</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-invoice-client.js"></script>
+  <script src="yind-auth.js"></script>
+  <script>requireYindAuth("monthly-work-page.html");</script>
+  <style>
+    :root {
+      --page: #f4f7fb;
+      --card: #ffffff;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d9e3ee;
+      --field: #fbfcfe;
+      --primary: #0f766e;
+      --primary-dark: #0b5f59;
+      --danger: #b42318;
+      --danger-soft: #fff1f2;
+      --success: #087443;
+      --shadow: 0 8px 24px rgba(23, 32, 51, 0.07);
+      font-family: "Noto Sans Thai", "Segoe UI", Tahoma, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--page); line-height: 1.45; }
+    .page { width: min(1440px, calc(100% - 32px)); margin: 0 auto; padding: 26px 0 42px; }
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+    .eyebrow { margin: 0 0 4px; color: var(--primary); font-size: 0.78rem; font-weight: 900; text-transform: uppercase; }
+    h1 { margin: 0; font-size: 1.75rem; letter-spacing: 0; }
+    .subtitle { margin: 5px 0 0; color: var(--muted); }
+    .page-nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+    .nav-link, .button { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; border: 1px solid transparent; border-radius: 8px; padding: 8px 12px; font: inherit; font-weight: 800; text-decoration: none; cursor: pointer; }
+    .nav-link { border-color: var(--line); color: #344054; background: #fff; }
+    .nav-link.active { color: #fff; border-color: var(--primary); background: var(--primary); }
+    .button.primary { color: #fff; background: var(--primary); }
+    .button.primary:hover { background: var(--primary-dark); }
+    .button.secondary { color: #344054; border-color: var(--line); background: #fff; }
+    .button.danger { color: var(--danger); border-color: #fecaca; background: var(--danger-soft); min-height: 34px; padding: 5px 9px; }
+    .button:disabled { opacity: 0.6; cursor: wait; }
+    .filters, .section-card { border: 1px solid var(--line); border-radius: 8px; background: var(--card); box-shadow: var(--shadow); }
+    .filters { display: flex; align-items: end; gap: 14px; padding: 16px; margin-bottom: 18px; }
+    .field { display: grid; gap: 6px; min-width: 150px; }
+    label { color: #344054; font-size: 0.88rem; font-weight: 800; }
+    select, input, textarea { width: 100%; border: 1px solid #cbd7e4; border-radius: 6px; padding: 8px 9px; color: var(--ink); font: inherit; background: var(--field); }
+    select, input { min-height: 38px; }
+    textarea { min-height: 66px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1); }
+    .status { min-height: 22px; margin: 0 0 14px; color: var(--success); font-weight: 800; }
+    .status.error { color: var(--danger); }
+    .section-card { margin-top: 18px; overflow: hidden; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px; border-bottom: 1px solid var(--line); }
+    h2 { margin: 0; font-size: 1.1rem; letter-spacing: 0; }
+    .section-head p { margin: 3px 0 0; color: var(--muted); font-size: 0.88rem; }
+    .table-scroll { overflow: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid var(--line); padding: 9px; vertical-align: top; text-align: left; }
+    th { color: #475467; background: #f8fafc; font-size: 0.84rem; font-weight: 900; white-space: nowrap; }
+    .work-table { min-width: 1360px; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+    .work-table thead th { position: sticky; top: 0; z-index: 3; padding: 11px 9px; background: #eef4f7; }
+    .work-table th:first-child, .work-table td:first-child { position: sticky; left: 0; z-index: 2; width: 96px; min-width: 96px; text-align: center; font-weight: 900; border-right: 1px solid #c7d4e1; box-shadow: 5px 0 10px rgba(23, 32, 51, 0.06); }
+    .work-table th:first-child { z-index: 4; background: #e6f5f2; }
+    .work-table tbody td:first-child { background: #fff !important; }
+    .work-table tbody tr:nth-child(even) td:first-child { background: #f5f8fc !important; }
+    .work-table tbody tr.weekend td:first-child { background: #fff2dd !important; }
+    .work-table td { min-width: 170px; padding: 8px; transition: background 0.16s ease; }
+    .work-table tbody tr:nth-child(even) td { background: #fbfcfe; }
+    .work-table tbody tr:hover td { background: #f0faf8; }
+    .work-table tbody tr.weekend td { background: #fffaf2; }
+    .work-table tbody tr.weekend td:first-child { background: #fff2dd; }
+    .vehicle-label { display: block; color: #344054; font-size: 0.88rem; }
+    .day-cell { display: grid; justify-items: center; gap: 2px; padding-top: 12px !important; }
+    .day-number { color: var(--ink); font-size: 1rem; }
+    .day-week { color: var(--muted); font-size: 0.7rem; font-weight: 700; }
+    .weekend .day-week { color: #a15c00; }
+    .work-table textarea { min-height: 78px; border-color: #d5e0eb; background: #fff; font-size: 0.86rem; line-height: 1.45; }
+    .work-table textarea::placeholder { color: #98a2b3; }
+    .work-table textarea:focus { min-height: 108px; background: #fff; }
+    .withdrawal-table { min-width: 920px; }
+    .withdrawal-table td { min-width: 120px; }
+    .withdrawal-table textarea { min-height: 38px; }
+    .withdrawal-table .amount { min-width: 110px; text-align: right; }
+    .empty-row { padding: 22px; color: var(--muted); text-align: center; }
+    .footer-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+    @media (max-width: 760px) {
+      .page { width: min(100% - 20px, 680px); padding-top: 18px; }
+      .page-header, .filters { align-items: stretch; flex-direction: column; }
+      .page-nav { justify-content: stretch; }
+      .nav-link { flex: 1 1 136px; }
+      .field { min-width: 0; }
+      .section-head { align-items: stretch; flex-direction: column; }
+      .section-head .button { width: 100%; }
+      .footer-actions { display: grid; grid-template-columns: 1fr 1fr; }
+      h1 { font-size: 1.45rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">YinD &amp; Son</p>
+        <h1>บันทึกงานรายเดือน</h1>
+        <p class="subtitle">บันทึกงานรถ รายการเบิกพนักงาน และรายการเบิกรถร่วม</p>
+      </div>
+      <nav class="page-nav" aria-label="เมนูหลัก">
+        <a class="nav-link" href="dashboard-page.html">Dashboard</a>
+        <a class="nav-link" href="create-invoice-page.html">Create Invoice</a>
+        <a class="nav-link" href="report-page.html">Report</a>
+        <a class="nav-link active" href="monthly-work-page.html" aria-current="page">บันทึกงานรายเดือน</a>
+      </nav>
+    </header>
+
+    <section class="filters" aria-label="เลือกช่วงเวลา">
+      <div class="field">
+        <label for="monthFilter">เดือน</label>
+        <select id="monthFilter"></select>
+      </div>
+      <div class="field">
+        <label for="yearFilter">ปี</label>
+        <select id="yearFilter"></select>
+      </div>
+    </section>
+
+    <p class="status" id="statusMessage" aria-live="polite"></p>
+
+    <section class="section-card" aria-labelledby="vehicleWorkTitle">
+      <div class="section-head">
+        <div>
+          <h2 id="vehicleWorkTitle">บันทึกรายการทำงานของรถ</h2>
+          <p id="workPeriod"></p>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="work-table">
+          <thead><tr id="vehicleWorkHead"></tr></thead>
+          <tbody id="vehicleWorkBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-card" aria-labelledby="employeeTitle">
+      <div class="section-head">
+        <div>
+          <h2 id="employeeTitle">รายการเบิกเงินพนักงาน</h2>
+          <p>บันทึกรายการเบิกของพนักงานในเดือนที่เลือก</p>
+        </div>
+        <button class="button secondary" id="addEmployeeButton" type="button">เพิ่มรายการเบิกพนักงาน</button>
+      </div>
+      <div class="table-scroll">
+        <table class="withdrawal-table">
+          <thead><tr><th>วันที่</th><th>ชื่อพนักงาน</th><th>รายการเบิก</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>ลบ</th></tr></thead>
+          <tbody id="employeeBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-card" aria-labelledby="sharedTitle">
+      <div class="section-head">
+        <div>
+          <h2 id="sharedTitle">รายการเบิกรถร่วม</h2>
+          <p>บันทึกเบิกล่วงหน้า เบิกยาง หรือรายการอื่น ๆ</p>
+        </div>
+        <button class="button secondary" id="addSharedButton" type="button">เพิ่มรายการเบิกรถร่วม</button>
+      </div>
+      <div class="table-scroll">
+        <table class="withdrawal-table">
+          <thead><tr><th>วันที่</th><th>ประเภทรายการเบิก</th><th>รายละเอียด</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>ลบ</th></tr></thead>
+          <tbody id="sharedBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="footer-actions">
+      <button class="button secondary" id="clearButton" type="button">ล้างข้อมูล</button>
+      <button class="button primary" id="saveButton" type="button">บันทึกข้อมูล</button>
+    </div>
+  </main>
+
+  <script>
+    const VEHICLES = ["7741", "8932", "0239", "รถไถ", "PC130", "PC200", "PC210"];
+    const EMPLOYEES = ["น้าหนอง", "พี่กุ้ง", "พี่ชาติ", "พี่อ้น", "ฟิล์ม"];
+    const MONTH_NAMES = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+    const monthFilter = document.querySelector("#monthFilter");
+    const yearFilter = document.querySelector("#yearFilter");
+    const vehicleWorkHead = document.querySelector("#vehicleWorkHead");
+    const vehicleWorkBody = document.querySelector("#vehicleWorkBody");
+    const employeeBody = document.querySelector("#employeeBody");
+    const sharedBody = document.querySelector("#sharedBody");
+    const statusMessage = document.querySelector("#statusMessage");
+    const workPeriod = document.querySelector("#workPeriod");
+    const saveButton = document.querySelector("#saveButton");
+    let canSaveMonthlyWork = false;
+
+    function currentThaiDate() {
+      const now = new Date();
+      return { month: now.getMonth() + 1, year: now.getFullYear() + 543 };
+    }
+
+    function getMonthYear() {
+      return { month: Number(monthFilter.value), year: Number(yearFilter.value) };
+    }
+
+    function toGregorianDate(year, month, day) {
+      return [year - 543, String(month).padStart(2, "0"), String(day).padStart(2, "0")].join("-");
+    }
+
+    function daysInMonth(year, month) {
+      return new Date(year - 543, month, 0).getDate();
+    }
+
+    function getWeekday(date) {
+      const labels = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."];
+      return labels[date.getDay()];
+    }
+
+    function setStatus(message, isError) {
+      statusMessage.textContent = message;
+      statusMessage.classList.toggle("error", Boolean(isError));
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function employeeOptions(selected) {
+      return EMPLOYEES.map(function (employee) {
+        return '<option value="' + employee + '"' + (employee === selected ? " selected" : "") + '>' + employee + "</option>";
+      }).join("");
+    }
+
+    function sharedTypeOptions(selected) {
+      return ["เบิกล่วงหน้า", "เบิกยาง", "อื่น ๆ"].map(function (type) {
+        return '<option value="' + type + '"' + (type === selected ? " selected" : "") + '>' + type + "</option>";
+      }).join("");
+    }
+
+    function addEmployeeRow(record) {
+      const data = record || {};
+      const row = document.createElement("tr");
+      row.innerHTML =
+        '<td><input class="withdrawal-date" type="date" value="' + (data.withdrawal_date || "") + '"></td>' +
+        '<td><select class="employee-name">' + employeeOptions(data.employee_name || EMPLOYEES[0]) + '</select></td>' +
+        '<td><textarea class="withdrawal-detail" placeholder="รายการเบิก">' + escapeHtml(data.withdrawal_detail) + '</textarea></td>' +
+        '<td><input class="amount" type="number" min="0" step="0.01" value="' + (data.amount || "") + '" placeholder="0.00"></td>' +
+        '<td><textarea class="withdrawal-note" placeholder="หมายเหตุ">' + escapeHtml(data.note) + '</textarea></td>' +
+        '<td><button class="button danger row-delete" type="button">ลบ</button></td>';
+      employeeBody.appendChild(row);
+    }
+
+    function addSharedRow(record) {
+      const data = record || {};
+      const row = document.createElement("tr");
+      row.innerHTML =
+        '<td><input class="withdrawal-date" type="date" value="' + (data.withdrawal_date || "") + '"></td>' +
+        '<td><select class="shared-type">' + sharedTypeOptions(data.withdrawal_type || "เบิกล่วงหน้า") + '</select></td>' +
+        '<td><textarea class="withdrawal-detail" placeholder="รายละเอียด">' + escapeHtml(data.withdrawal_detail) + '</textarea></td>' +
+        '<td><input class="amount" type="number" min="0" step="0.01" value="' + (data.amount || "") + '" placeholder="0.00"></td>' +
+        '<td><textarea class="withdrawal-note" placeholder="หมายเหตุ">' + escapeHtml(data.note) + '</textarea></td>' +
+        '<td><button class="button danger row-delete" type="button">ลบ</button></td>';
+      sharedBody.appendChild(row);
+    }
+
+    function bindRowDeletes(container) {
+      container.addEventListener("click", function (event) {
+        if (event.target.closest(".row-delete")) {
+          event.target.closest("tr").remove();
+        }
+      });
+    }
+
+    function renderVehicleWorkTable(logs) {
+      const period = getMonthYear();
+      const logMap = new Map(logs.map(function (log) {
+        return [log.work_date + "|" + log.vehicle_name, log.work_detail];
+      }));
+      vehicleWorkHead.innerHTML = "<th>วันที่</th>" + VEHICLES.map(function (vehicle) {
+        return '<th><span class="vehicle-label">' + vehicle + "</span></th>";
+      }).join("");
+      vehicleWorkBody.innerHTML = "";
+      for (let day = 1; day <= daysInMonth(period.year, period.month); day += 1) {
+        const date = toGregorianDate(period.year, period.month, day);
+        const calendarDate = new Date(period.year - 543, period.month - 1, day);
+        const isWeekend = calendarDate.getDay() === 0 || calendarDate.getDay() === 6;
+        const row = document.createElement("tr");
+        if (isWeekend) {
+          row.classList.add("weekend");
+        }
+        row.innerHTML = '<td class="day-cell"><span class="day-number">' + day + '</span><span class="day-week">' + getWeekday(calendarDate) + "</span></td>" + VEHICLES.map(function (vehicle) {
+          const value = logMap.get(date + "|" + vehicle) || "";
+          return '<td><textarea data-work-date="' + date + '" data-vehicle="' + vehicle + '" aria-label="วันที่ ' + day + " รถ " + vehicle + '" placeholder="ลูกค้า / สถานที่ / งาน / เที่ยว / หมายเหตุ">' + escapeHtml(value) + "</textarea></td>";
+        }).join("");
+        vehicleWorkBody.appendChild(row);
+      }
+      workPeriod.textContent = MONTH_NAMES[period.month - 1] + " " + period.year + " (" + daysInMonth(period.year, period.month) + " วัน)";
+    }
+
+    async function loadMonthlyWork() {
+      const period = getMonthYear();
+      setStatus("กำลังโหลดข้อมูล...");
+      saveButton.disabled = true;
+      try {
+        const data = await fetchMonthlyWorkData(period);
+        renderVehicleWorkTable(data.vehicleLogs);
+        employeeBody.innerHTML = "";
+        sharedBody.innerHTML = "";
+        data.employeeWithdrawals.forEach(addEmployeeRow);
+        data.sharedVehicleWithdrawals.forEach(addSharedRow);
+        setStatus("");
+      } catch (error) {
+        console.error(error);
+        renderVehicleWorkTable([]);
+        employeeBody.innerHTML = "";
+        sharedBody.innerHTML = "";
+        setStatus(error.message || "โหลดข้อมูลไม่สำเร็จ", true);
+      } finally {
+        saveButton.disabled = false;
+      }
+    }
+
+    function collectVehicleLogs(period) {
+      return Array.from(vehicleWorkBody.querySelectorAll("textarea[data-work-date]"))
+        .map(function (input) {
+          return {
+            work_month: period.month,
+            work_year: period.year,
+            work_date: input.dataset.workDate,
+            vehicle_name: input.dataset.vehicle,
+            work_detail: input.value.trim()
+          };
+        })
+        .filter(function (record) { return record.work_detail; });
+    }
+
+    function collectWithdrawals(container, period, type) {
+      return Array.from(container.querySelectorAll("tr")).map(function (row) {
+        const date = row.querySelector(".withdrawal-date").value;
+        const detail = row.querySelector(".withdrawal-detail").value.trim();
+        const amount = Number(row.querySelector(".amount").value || 0);
+        const note = row.querySelector(".withdrawal-note").value.trim();
+        const personOrType = type === "employee"
+          ? row.querySelector(".employee-name").value
+          : row.querySelector(".shared-type").value;
+        return { date: date, detail: detail, amount: amount, note: note, personOrType: personOrType };
+      }).filter(function (record) {
+        return record.date || record.detail || record.amount || record.note;
+      });
+    }
+
+    async function saveMonthlyWork() {
+      if (!canSaveMonthlyWork) {
+        setStatus("บัญชีนี้ไม่มีสิทธิ์บันทึกงานรายเดือน", true);
+        return;
+      }
+
+      const period = getMonthYear();
+      const employeeRows = collectWithdrawals(employeeBody, period, "employee");
+      const sharedRows = collectWithdrawals(sharedBody, period, "shared");
+      const invalidRow = employeeRows.concat(sharedRows).find(function (record) {
+        return !record.date || !record.detail || record.amount <= 0;
+      });
+      if (invalidRow) {
+        setStatus("กรุณากรอกวันที่ รายละเอียด และจำนวนเงินมากกว่า 0 ให้ครบถ้วน", true);
+        return;
+      }
+
+      const employeeWithdrawals = employeeRows.map(function (record) {
+        return {
+          work_month: period.month,
+          work_year: period.year,
+          withdrawal_date: record.date,
+          employee_name: record.personOrType,
+          withdrawal_detail: record.detail,
+          amount: record.amount,
+          note: record.note
+        };
+      });
+      const sharedVehicleWithdrawals = sharedRows.map(function (record) {
+        return {
+          work_month: period.month,
+          work_year: period.year,
+          withdrawal_date: record.date,
+          withdrawal_type: record.personOrType,
+          withdrawal_detail: record.detail,
+          amount: record.amount,
+          note: record.note
+        };
+      });
+
+      saveButton.disabled = true;
+      setStatus("กำลังบันทึกข้อมูล...");
+      try {
+        await saveMonthlyWorkData({
+          month: period.month,
+          year: period.year,
+          vehicleLogs: collectVehicleLogs(period),
+          employeeWithdrawals: employeeWithdrawals,
+          sharedVehicleWithdrawals: sharedVehicleWithdrawals
+        });
+        setStatus("บันทึกข้อมูลเรียบร้อย");
+      } catch (error) {
+        console.error(error);
+        setStatus(error.message || "บันทึกข้อมูลไม่สำเร็จ", true);
+      } finally {
+        saveButton.disabled = false;
+      }
+    }
+
+    function clearMonthlyWork() {
+      vehicleWorkBody.querySelectorAll("textarea").forEach(function (input) { input.value = ""; });
+      employeeBody.innerHTML = "";
+      sharedBody.innerHTML = "";
+      setStatus("");
+    }
+
+    function initializeFilters() {
+      const current = currentThaiDate();
+      monthFilter.innerHTML = MONTH_NAMES.map(function (name, index) {
+        return '<option value="' + (index + 1) + '">' + name + "</option>";
+      }).join("");
+      yearFilter.innerHTML = [current.year - 1, current.year, current.year + 1].map(function (year) {
+        return '<option value="' + year + '">' + year + "</option>";
+      }).join("");
+      monthFilter.value = String(current.month);
+      yearFilter.value = String(current.year);
+    }
+
+    async function applyMonthlyWorkPermission() {
+      const { data } = await supabaseClient.auth.getSession();
+      canSaveMonthlyWork = getYindUsernameFromSession(data.session) === "ntpbenz";
+      saveButton.hidden = !canSaveMonthlyWork;
+    }
+
+    document.querySelector("#addEmployeeButton").addEventListener("click", function () { addEmployeeRow(); });
+    document.querySelector("#addSharedButton").addEventListener("click", function () { addSharedRow(); });
+    document.querySelector("#saveButton").addEventListener("click", saveMonthlyWork);
+    document.querySelector("#clearButton").addEventListener("click", clearMonthlyWork);
+    monthFilter.addEventListener("change", loadMonthlyWork);
+    yearFilter.addEventListener("change", loadMonthlyWork);
+    bindRowDeletes(employeeBody);
+    bindRowDeletes(sharedBody);
+    initializeFilters();
+    applyMonthlyWorkPermission();
+    loadMonthlyWork();
+  </script>
+</body>
+</html>

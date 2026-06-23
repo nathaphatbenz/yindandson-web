@@ -43,6 +43,19 @@ Vercel uses:
 
 The repository includes vercel.json with these settings.
 
+## LINE Notifications
+
+Document creation can send a LINE Messaging API push notification through the Vercel API route api/send-line-notification.js.
+
+Set these server-only values in Vercel Project Settings -> Environment Variables:
+
+- LINE_CHANNEL_ACCESS_TOKEN
+- LINE_TARGET_ID
+- SUPABASE_URL
+- SUPABASE_PUBLISHABLE_KEY
+
+Do not use LINE Notify and never place LINE_CHANNEL_ACCESS_TOKEN in frontend files or variables prefixed with NEXT_PUBLIC_ or VITE_.
+
 ## GitHub
 
 The .gitignore excludes node_modules, environment files, Vercel metadata, build output, local workspace folders, and old copied HTML files.

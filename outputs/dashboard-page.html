@@ -502,6 +502,31 @@
       font-size: 0.82rem;
     }
 
+    .receipt-issued-status {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 24px;
+      padding: 3px 8px;
+      border: 1px solid #b8e2d8;
+      border-radius: 999px;
+      color: #067647;
+      background: #ecfdf3;
+      font-size: 0.78rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .invoice-no .receipt-issued-status {
+      margin-top: 5px;
+    }
+
+    .receipt-issued-status.pending {
+      border-color: #fed7aa;
+      color: #9a5b00;
+      background: #fff7ed;
+    }
+
     .folder-size-large .folder-meta {
       gap: 5px;
       font-size: 0.96rem;
@@ -769,6 +794,7 @@
       <div class="hero-actions">
         <a class="button ghost active" href="dashboard-page.html" aria-current="page"><i data-lucide="layout-dashboard" aria-hidden="true"></i>Dashboard</a>
         <a class="button ghost" href="report-page.html"><i data-lucide="file-text" aria-hidden="true"></i>Report</a>
+        <a class="button ghost" href="monthly-work-page.html"><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
         <a class="button ghost" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>Work List</a>
         <a class="button" href="create-invoice-page.html"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้าง Invoice</a>
       </div>
@@ -1076,14 +1102,28 @@
 
     function canCreateReceipt(record) {
       const isInv = String(record.invoice_number || "").toUpperCase().startsWith("INV");
-      const hasReceiptDocument = invoiceRecords.some((item) => {
+      const hasReceiptDocument = hasLinkedReceiptDocumentLocally(record);
+
+      return isInv && !hasReceiptDocument;
+    }
+
+    function hasLinkedReceiptDocumentLocally(record) {
+      return invoiceRecords.some((item) => {
         const isLinkedToThisInv = item.source_invoice_id === record.id;
         const isReceiptType = item.document_type === "ใบกำกับภาษี / ใบเสร็จรับเงิน"
           || item.document_type === "ใบเสร็จรับเงิน / ใบกำกับภาษี";
         return isLinkedToThisInv && isReceiptType;
       });
+    }
 
-      return isInv && !hasReceiptDocument;
+    function renderReceiptIssuedStatus(record) {
+      if (!isBillingInvoice(record)) {
+        return "";
+      }
+
+      return hasLinkedReceiptDocumentLocally(record)
+        ? '<span class="receipt-issued-status">ออกใบกำกับภาษีเรียบร้อย</span>'
+        : '<span class="receipt-issued-status pending">ยังไม่ออกใบกำกับภาษี</span>';
     }
 
     function isBillingInvoice(record) {
@@ -1147,6 +1187,7 @@
           <div class="folder-number">${escapeHtml(record.invoice_number)}</div>
           <div class="folder-meta">
             <span>วันที่ออกเอกสาร: ${escapeHtml(formatDisplayDate(record.document_date))}</span>
+            ${renderReceiptIssuedStatus(record)}
           </div>
         </button>
       `).join("");
@@ -1156,7 +1197,7 @@
       tableBody.innerHTML = records.map((record) => `
         <tr>
           <td>${escapeHtml(record.customer_name)}</td>
-          <td class="invoice-no">${escapeHtml(record.invoice_number)}</td>
+          <td class="invoice-no">${escapeHtml(record.invoice_number)}${renderReceiptIssuedStatus(record)}</td>
           <td>${escapeHtml(formatDisplayDate(record.document_date))}</td>
           <td>${escapeHtml(record.document_type)}</td>
           <td>${renderCreateReceiptAction(record)}</td>
@@ -1175,6 +1216,7 @@
             <span>หมายเลขเอกสาร: <strong>${escapeHtml(record.invoice_number)}</strong></span>
             <span>วันที่ออกเอกสาร: <strong>${escapeHtml(formatDisplayDate(record.document_date))}</strong></span>
             <span>ประเภทเอกสาร: <strong>${escapeHtml(record.document_type)}</strong></span>
+            ${renderReceiptIssuedStatus(record)}
           </div>
           <div class="actions">
             ${canCreateReceipt(record) ? `<a class="action-link receipt" href="${getCreateReceiptUrl(record.id)}">สร้างใบกำกับภาษี</a>` : ""}
