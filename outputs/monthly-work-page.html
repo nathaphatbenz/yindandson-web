@@ -97,6 +97,9 @@
       .section-head .button { width: 100%; }
       .footer-actions { display: grid; grid-template-columns: 1fr 1fr; }
       h1 { font-size: 1.45rem; }
+      .work-table th:first-child,
+      .work-table td:first-child { position: sticky !important; left: 0; z-index: 5; }
+      .work-table th:first-child { z-index: 7; }
     }
   </style>
 </head>
@@ -125,11 +128,19 @@
         <label for="yearFilter">ปี</label>
         <select id="yearFilter"></select>
       </div>
+      <div class="field">
+        <label for="sectionFilter">เลือกส่วนงาน</label>
+        <select id="sectionFilter">
+          <option value="vehicle">บันทึกรายการทำงานรถ</option>
+          <option value="employee">รายการเบิกเงินพนักงาน</option>
+          <option value="shared">รายการเบิกรถร่วม</option>
+        </select>
+      </div>
     </section>
 
     <p class="status" id="statusMessage" aria-live="polite"></p>
 
-    <section class="section-card" aria-labelledby="vehicleWorkTitle">
+    <section class="section-card" id="vehicleSection" aria-labelledby="vehicleWorkTitle">
       <div class="section-head">
         <div>
           <h2 id="vehicleWorkTitle">บันทึกรายการทำงานของรถ</h2>
@@ -144,7 +155,7 @@
       </div>
     </section>
 
-    <section class="section-card" aria-labelledby="employeeTitle">
+    <section class="section-card" id="employeeSection" aria-labelledby="employeeTitle">
       <div class="section-head">
         <div>
           <h2 id="employeeTitle">รายการเบิกเงินพนักงาน</h2>
@@ -160,7 +171,7 @@
       </div>
     </section>
 
-    <section class="section-card" aria-labelledby="sharedTitle">
+    <section class="section-card" id="sharedSection" aria-labelledby="sharedTitle">
       <div class="section-head">
         <div>
           <h2 id="sharedTitle">รายการเบิกรถร่วม</h2>
@@ -188,6 +199,7 @@
     const MONTH_NAMES = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
     const monthFilter = document.querySelector("#monthFilter");
     const yearFilter = document.querySelector("#yearFilter");
+    const sectionFilter = document.querySelector("#sectionFilter");
     const vehicleWorkHead = document.querySelector("#vehicleWorkHead");
     const vehicleWorkBody = document.querySelector("#vehicleWorkBody");
     const employeeBody = document.querySelector("#employeeBody");
@@ -196,6 +208,13 @@
     const workPeriod = document.querySelector("#workPeriod");
     const saveButton = document.querySelector("#saveButton");
     let canSaveMonthlyWork = false;
+
+    function updateVisibleSection() {
+      const selectedSection = sectionFilter.value;
+      document.querySelector("#vehicleSection").hidden = selectedSection !== "vehicle";
+      document.querySelector("#employeeSection").hidden = selectedSection !== "employee";
+      document.querySelector("#sharedSection").hidden = selectedSection !== "shared";
+    }
 
     function currentThaiDate() {
       const now = new Date();
@@ -408,6 +427,8 @@
           sharedVehicleWithdrawals: sharedVehicleWithdrawals
         });
         setStatus("บันทึกข้อมูลเรียบร้อย");
+        window.alert("บันทึกข้อมูลรายเดือนเรียบร้อย");
+        window.location.reload();
       } catch (error) {
         console.error(error);
         setStatus(error.message || "บันทึกข้อมูลไม่สำเร็จ", true);
@@ -447,9 +468,11 @@
     document.querySelector("#clearButton").addEventListener("click", clearMonthlyWork);
     monthFilter.addEventListener("change", loadMonthlyWork);
     yearFilter.addEventListener("change", loadMonthlyWork);
+    sectionFilter.addEventListener("change", updateVisibleSection);
     bindRowDeletes(employeeBody);
     bindRowDeletes(sharedBody);
     initializeFilters();
+    updateVisibleSection();
     applyMonthlyWorkPermission();
     loadMonthlyWork();
   </script>

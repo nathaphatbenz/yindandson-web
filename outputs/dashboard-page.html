@@ -1197,7 +1197,7 @@
       tableBody.innerHTML = records.map((record) => `
         <tr>
           <td>${escapeHtml(record.customer_name)}</td>
-          <td class="invoice-no">${escapeHtml(record.invoice_number)}${renderReceiptIssuedStatus(record)}</td>
+          <td class="invoice-no">${escapeHtml(record.invoice_number)}</td>
           <td>${escapeHtml(formatDisplayDate(record.document_date))}</td>
           <td>${escapeHtml(record.document_type)}</td>
           <td>${renderCreateReceiptAction(record)}</td>
@@ -1216,7 +1216,6 @@
             <span>หมายเลขเอกสาร: <strong>${escapeHtml(record.invoice_number)}</strong></span>
             <span>วันที่ออกเอกสาร: <strong>${escapeHtml(formatDisplayDate(record.document_date))}</strong></span>
             <span>ประเภทเอกสาร: <strong>${escapeHtml(record.document_type)}</strong></span>
-            ${renderReceiptIssuedStatus(record)}
           </div>
           <div class="actions">
             ${canCreateReceipt(record) ? `<a class="action-link receipt" href="${getCreateReceiptUrl(record.id)}">สร้างใบกำกับภาษี</a>` : ""}
