@@ -84,6 +84,12 @@
     .withdrawal-table td { min-width: 120px; }
     .withdrawal-table textarea { min-height: 38px; }
     .withdrawal-table .amount { min-width: 110px; text-align: right; }
+    .employee-summary { padding: 16px; border-top: 1px solid var(--line); background: #f8fafc; }
+    .employee-summary h3 { margin: 0 0 4px; color: var(--ink); font-size: 1rem; }
+    .employee-summary p { margin: 0 0 12px; color: var(--muted); font-size: 0.85rem; }
+    .employee-summary-table { min-width: 640px; background: #fff; }
+    .employee-summary-table th { background: #edf4f7; }
+    .employee-summary-table td:last-child { color: #0f5f5a; text-align: right; font-weight: 900; white-space: nowrap; }
     .empty-row { padding: 22px; color: var(--muted); text-align: center; }
     .footer-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
@@ -165,9 +171,19 @@
       </div>
       <div class="table-scroll">
         <table class="withdrawal-table">
-          <thead><tr><th>วันที่</th><th>ชื่อพนักงาน</th><th>รายการเบิก</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>ลบ</th></tr></thead>
+          <thead><tr><th>วันที่</th><th>ชื่อพนักงาน</th><th>จำนวนเงิน</th><th>หมายเหตุ</th><th>ลบ</th></tr></thead>
           <tbody id="employeeBody"></tbody>
         </table>
+      </div>
+      <div class="employee-summary" aria-labelledby="employeeSummaryTitle">
+        <h3 id="employeeSummaryTitle">สรุปยอดเบิกพนักงาน</h3>
+        <p>ตรวจสอบวันที่เบิกและยอดรวมของพนักงานแต่ละคนในเดือนที่เลือก</p>
+        <div class="table-scroll">
+          <table class="employee-summary-table">
+            <thead><tr><th>ชื่อพนักงาน</th><th>วันที่เบิก</th><th>ยอดเบิกรวม</th></tr></thead>
+            <tbody id="employeeSummaryBody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -203,6 +219,7 @@
     const vehicleWorkHead = document.querySelector("#vehicleWorkHead");
     const vehicleWorkBody = document.querySelector("#vehicleWorkBody");
     const employeeBody = document.querySelector("#employeeBody");
+    const employeeSummaryBody = document.querySelector("#employeeSummaryBody");
     const sharedBody = document.querySelector("#sharedBody");
     const statusMessage = document.querySelector("#statusMessage");
     const workPeriod = document.querySelector("#workPeriod");
@@ -270,11 +287,42 @@
       row.innerHTML =
         '<td><input class="withdrawal-date" type="date" value="' + (data.withdrawal_date || "") + '"></td>' +
         '<td><select class="employee-name">' + employeeOptions(data.employee_name || EMPLOYEES[0]) + '</select></td>' +
-        '<td><textarea class="withdrawal-detail" placeholder="รายการเบิก">' + escapeHtml(data.withdrawal_detail) + '</textarea></td>' +
         '<td><input class="amount" type="number" min="0" step="0.01" value="' + (data.amount || "") + '" placeholder="0.00"></td>' +
         '<td><textarea class="withdrawal-note" placeholder="หมายเหตุ">' + escapeHtml(data.note) + '</textarea></td>' +
         '<td><button class="button danger row-delete" type="button">ลบ</button></td>';
       employeeBody.appendChild(row);
+      renderEmployeeSummary();
+    }
+
+    function formatSummaryDate(value) {
+      const parts = String(value || "").split("-");
+      return parts.length === 3 ? parts[2] + "/" + parts[1] + "/" + parts[0] : "-";
+    }
+
+    function formatBaht(value) {
+      return new Intl.NumberFormat("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + " บาท";
+    }
+
+    function renderEmployeeSummary() {
+      const summaries = new Map(EMPLOYEES.map(function (employee) {
+        return [employee, { dates: new Set(), total: 0 }];
+      }));
+
+      employeeBody.querySelectorAll("tr").forEach(function (row) {
+        const employee = row.querySelector(".employee-name").value;
+        const date = row.querySelector(".withdrawal-date").value;
+        const amount = Number(row.querySelector(".amount").value || 0);
+        const summary = summaries.get(employee);
+        if (!summary) return;
+        if (date) summary.dates.add(date);
+        summary.total += Number.isFinite(amount) ? amount : 0;
+      });
+
+      employeeSummaryBody.innerHTML = EMPLOYEES.map(function (employee) {
+        const summary = summaries.get(employee);
+        const dates = Array.from(summary.dates).sort().map(formatSummaryDate).join(", ") || "-";
+        return "<tr><td>" + escapeHtml(employee) + "</td><td>" + escapeHtml(dates) + "</td><td>" + formatBaht(summary.total) + "</td></tr>";
+      }).join("");
     }
 
     function addSharedRow(record) {
@@ -290,10 +338,11 @@
       sharedBody.appendChild(row);
     }
 
-    function bindRowDeletes(container) {
+    function bindRowDeletes(container, onChange) {
       container.addEventListener("click", function (event) {
         if (event.target.closest(".row-delete")) {
           event.target.closest("tr").remove();
+          if (onChange) onChange();
         }
       });
     }
@@ -335,12 +384,14 @@
         sharedBody.innerHTML = "";
         data.employeeWithdrawals.forEach(addEmployeeRow);
         data.sharedVehicleWithdrawals.forEach(addSharedRow);
+        renderEmployeeSummary();
         setStatus("");
       } catch (error) {
         console.error(error);
         renderVehicleWorkTable([]);
         employeeBody.innerHTML = "";
         sharedBody.innerHTML = "";
+        renderEmployeeSummary();
         setStatus(error.message || "โหลดข้อมูลไม่สำเร็จ", true);
       } finally {
         saveButton.disabled = false;
@@ -364,7 +415,8 @@
     function collectWithdrawals(container, period, type) {
       return Array.from(container.querySelectorAll("tr")).map(function (row) {
         const date = row.querySelector(".withdrawal-date").value;
-        const detail = row.querySelector(".withdrawal-detail").value.trim();
+        const detailInput = row.querySelector(".withdrawal-detail");
+        const detail = detailInput ? detailInput.value.trim() : "";
         const amount = Number(row.querySelector(".amount").value || 0);
         const note = row.querySelector(".withdrawal-note").value.trim();
         const personOrType = type === "employee"
@@ -385,11 +437,14 @@
       const period = getMonthYear();
       const employeeRows = collectWithdrawals(employeeBody, period, "employee");
       const sharedRows = collectWithdrawals(sharedBody, period, "shared");
-      const invalidRow = employeeRows.concat(sharedRows).find(function (record) {
+      const invalidEmployeeRow = employeeRows.find(function (record) {
+        return !record.date || record.amount <= 0;
+      });
+      const invalidSharedRow = sharedRows.find(function (record) {
         return !record.date || !record.detail || record.amount <= 0;
       });
-      if (invalidRow) {
-        setStatus("กรุณากรอกวันที่ รายละเอียด และจำนวนเงินมากกว่า 0 ให้ครบถ้วน", true);
+      if (invalidEmployeeRow || invalidSharedRow) {
+        setStatus("กรุณากรอกวันที่ และจำนวนเงินมากกว่า 0 ให้ครบถ้วน (รถร่วมต้องกรอกรายละเอียดด้วย)", true);
         return;
       }
 
@@ -441,6 +496,7 @@
       vehicleWorkBody.querySelectorAll("textarea").forEach(function (input) { input.value = ""; });
       employeeBody.innerHTML = "";
       sharedBody.innerHTML = "";
+      renderEmployeeSummary();
       setStatus("");
     }
 
@@ -469,10 +525,13 @@
     monthFilter.addEventListener("change", loadMonthlyWork);
     yearFilter.addEventListener("change", loadMonthlyWork);
     sectionFilter.addEventListener("change", updateVisibleSection);
-    bindRowDeletes(employeeBody);
+    employeeBody.addEventListener("input", renderEmployeeSummary);
+    employeeBody.addEventListener("change", renderEmployeeSummary);
+    bindRowDeletes(employeeBody, renderEmployeeSummary);
     bindRowDeletes(sharedBody);
     initializeFilters();
     updateVisibleSection();
+    renderEmployeeSummary();
     applyMonthlyWorkPermission();
     loadMonthlyWork();
   </script>
