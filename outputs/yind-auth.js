@@ -53,3 +53,12 @@ async function requireYindAuth(redirectPath, allowedUsername = "") {
   sessionStorage.setItem("yind_login_username", username);
   return true;
 }
+
+async function signOutOfYind() {
+  try {
+    await supabaseClient.auth.signOut();
+  } finally {
+    sessionStorage.removeItem("yind_login_username");
+    window.location.href = "login-page.html";
+  }
+}

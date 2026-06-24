@@ -100,6 +100,8 @@
       text-decoration: none;
       transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
       white-space: nowrap;
+      font: inherit;
+      cursor: pointer;
     }
 
     .nav-link:hover {
@@ -159,6 +161,12 @@
       font-weight: 900;
       letter-spacing: 0;
     }
+
+    .required-note { margin: 0 0 16px; color: var(--muted); font-size: 0.88rem; }
+    .required-mark { color: var(--danger); font-weight: 900; }
+    .error-summary { margin: 0 0 14px; padding: 12px 14px; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b; background: #fff1f2; }
+    .error-summary strong { display: block; }
+    .error-summary ul { margin: 7px 0 0; padding-left: 20px; }
 
     .grid {
       display: grid;
@@ -370,6 +378,23 @@
       color: var(--danger);
       font-size: 0.83rem;
     }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.48);
+    }
+
+    .modal-backdrop.open { display: flex; }
+    .modal { width: min(420px, 100%); padding: 22px; border-radius: 8px; background: #fff; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22); }
+    .modal h2 { margin: 0 0 8px; font-size: 1.15rem; }
+    .modal p { margin: 0; color: var(--muted); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
     .item-table {
       border: 1px solid var(--line);
@@ -633,16 +658,18 @@
       </div>
 
       <nav class="page-nav" aria-label="เมนูหลัก">
-        <a class="nav-link" href="dashboard-page.html"><i data-lucide="layout-dashboard" aria-hidden="true"></i>Dashboard</a>
-        <a class="nav-link active" href="create-invoice-page.html" aria-current="page"><i data-lucide="file-plus-2" aria-hidden="true"></i>Create Invoice</a>
-        <a class="nav-link" href="report-page.html"><i data-lucide="file-text" aria-hidden="true"></i>Report</a>
+        <a class="nav-link" href="dashboard-page.html"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
+        <a class="nav-link active" href="create-invoice-page.html" aria-current="page"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้างเอกสาร</a>
+        <a class="nav-link" href="report-page.html"><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
         <a class="nav-link" href="monthly-work-page.html"><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
-        <a class="nav-link" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>Work List</a>
+        <a class="nav-link" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
+        <button class="nav-link" type="button" id="logoutButton"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
       </nav>
     </header>
 
     <section class="invoice-card" aria-label="CreateInvoicePage">
       <form id="invoiceForm" novalidate>
+        <p class="required-note">ช่องที่มี <span class="required-mark">*</span> จำเป็นต้องกรอก</p>
         <div class="section">
           <h2 class="section-title">ข้อมูลเอกสาร</h2>
           <div class="grid">
@@ -673,26 +700,26 @@
           <h2 class="section-title">ข้อมูลบริษัทลูกค้า</h2>
           <div class="grid">
             <div class="field full">
-              <label for="customerCompany">ชื่อบริษัทลูกค้า</label>
+              <label for="customerCompany">ชื่อบริษัทลูกค้า <span class="required-mark">*</span></label>
               <input id="customerCompany" name="ชื่อบริษัทลูกค้า" type="text" autocomplete="organization" list="customerCompanyOptions" required>
               <datalist id="customerCompanyOptions"></datalist>
               <div class="error" aria-live="polite"></div>
             </div>
 
             <div class="field full">
-              <label for="customerAddress">ที่อยู่บริษัทลูกค้า</label>
+              <label for="customerAddress">ที่อยู่บริษัทลูกค้า <span class="required-mark">*</span></label>
               <textarea id="customerAddress" name="ที่อยู่บริษัทลูกค้า" required></textarea>
               <div class="error" aria-live="polite"></div>
             </div>
 
             <div class="field">
-              <label for="taxId">เลขประจำตัวผู้เสียภาษี</label>
+              <label for="taxId">เลขประจำตัวผู้เสียภาษี <span class="required-mark">*</span></label>
               <input id="taxId" name="เลขประจำตัวผู้เสียภาษี" type="text" inputmode="numeric" required>
               <div class="error" aria-live="polite"></div>
             </div>
 
             <div class="field">
-              <label for="invoiceDate">วันที่ออกเอกสาร</label>
+              <label for="invoiceDate">วันที่ออกเอกสาร <span class="required-mark">*</span></label>
               <input id="invoiceDate" name="วันที่ออกใบ" type="date" required>
               <div class="error" aria-live="polite"></div>
             </div>
@@ -737,14 +764,26 @@
           </div>
         </div>
 
+        <div class="error-summary" id="errorSummary" role="alert" hidden></div>
         <div class="actions">
-          <button class="secondary" type="reset">ล้างข้อมูล</button>
+          <button class="secondary" id="resetFormButton" type="button">ล้างข้อมูล</button>
           <button class="primary" type="submit">บันทึกเอกสาร</button>
         </div>
         <p class="status" id="formStatus" aria-live="polite"></p>
       </form>
     </section>
   </main>
+
+  <div class="modal-backdrop" id="clearFormModal" role="dialog" aria-modal="true" aria-labelledby="clearFormTitle">
+    <div class="modal">
+      <h2 id="clearFormTitle">ยืนยันการล้างข้อมูล</h2>
+      <p>คุณต้องการล้างข้อมูลทั้งหมดหรือไม่? ข้อมูลที่กรอกไว้จะหายไป</p>
+      <div class="modal-actions">
+        <button class="secondary" id="cancelClearForm" type="button">ยกเลิก</button>
+        <button class="primary" id="confirmClearForm" type="button">ยืนยันล้างข้อมูล</button>
+      </div>
+    </div>
+  </div>
 
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
@@ -757,6 +796,7 @@
     if (window.lucide) {
       window.lucide.createIcons();
     }
+    document.querySelector("#logoutButton").addEventListener("click", signOutOfYind);
     const form = document.querySelector("#invoiceForm");
     const documentType = document.querySelector("#documentType");
     const documentTypeDisplay = document.querySelector("#documentTypeDisplay");
@@ -764,11 +804,17 @@
     const vatAmount = document.querySelector("#vatAmount");
     const grandTotal = document.querySelector("#grandTotal");
     const statusText = document.querySelector("#formStatus");
+    const errorSummary = document.querySelector("#errorSummary");
+    const resetFormButton = document.querySelector("#resetFormButton");
+    const clearFormModal = document.querySelector("#clearFormModal");
+    const cancelClearForm = document.querySelector("#cancelClearForm");
+    const confirmClearForm = document.querySelector("#confirmClearForm");
     const itemsBody = document.querySelector("#itemsBody");
     const addItemButton = document.querySelector("#addItemButton");
     const customerCompanyInput = document.querySelector("#customerCompany");
     const customerAddressInput = document.querySelector("#customerAddress");
     const taxIdInput = document.querySelector("#taxId");
+    let formHasChanges = false;
     const customerCompanyOptions = document.querySelector("#customerCompanyOptions");
     const advanceReceiptField = document.querySelector("#advanceReceiptField");
     const advanceReceiptCheckbox = document.querySelector("#advanceReceiptCheckbox");
@@ -816,6 +862,30 @@
 
     function clearStatus() {
       statusText.textContent = "";
+      updateErrorSummary();
+    }
+
+    function updateErrorSummary(focusFirstInvalid = false) {
+      const messages = [...new Set(Array.from(form.querySelectorAll(".error"))
+        .filter((error) => error.textContent.trim() && !error.closest("[hidden]"))
+        .map((error) => error.textContent.trim()))];
+
+      if (messages.length === 0) {
+        errorSummary.hidden = true;
+        errorSummary.innerHTML = "";
+        return;
+      }
+
+      errorSummary.hidden = false;
+      errorSummary.innerHTML = "<strong>กรุณาตรวจสอบข้อมูลต่อไปนี้</strong><ul>" + messages
+        .map((message) => "<li>" + escapeHtml(message) + "</li>")
+        .join("") + "</ul>";
+
+      if (focusFirstInvalid) {
+        const firstInvalid = Array.from(form.querySelectorAll(".invalid input, .invalid textarea, .invalid select"))
+          .find((input) => !input.disabled && input.offsetParent !== null);
+        firstInvalid?.focus();
+      }
     }
 
     async function loadCustomerDirectory() {
@@ -878,7 +948,7 @@
       });
 
       addItemButton.disabled = isLocked;
-      form.querySelector("button[type='reset']").disabled = isLocked;
+      resetFormButton.disabled = isLocked;
       itemsBody.querySelectorAll(".delete-item").forEach((button) => {
         button.disabled = isLocked || itemsBody.querySelectorAll(".item-row").length === 1;
       });
@@ -1094,17 +1164,17 @@
       row.className = "item-row";
       row.innerHTML = `
         <div class="item-cell">
-          <label class="item-label">รายละเอียดรายการ</label>
+          <label class="item-label">รายละเอียดรายการ <span class="required-mark">*</span></label>
           <textarea name="รายละเอียดรายการ" data-kind="description" data-validate="item" required></textarea>
           <div class="error" aria-live="polite"></div>
         </div>
         <div class="item-cell">
-          <label class="item-label">จำนวน</label>
+          <label class="item-label">จำนวน <span class="required-mark">*</span></label>
           <input name="จำนวน" type="number" min="0" step="1" data-kind="quantity" data-validate="item" required>
           <div class="error" aria-live="polite"></div>
         </div>
         <div class="item-cell">
-          <label class="item-label">ราคา/หน่วย</label>
+          <label class="item-label">ราคา/หน่วย <span class="required-mark">*</span></label>
           <input name="ราคา/หน่วย" type="number" min="0" step="0.01" data-kind="unitPrice" data-validate="item" required>
           <div class="error" aria-live="polite"></div>
         </div>
@@ -1157,6 +1227,7 @@
         isValid = false;
       }
 
+      updateErrorSummary(!isValid);
       return isValid;
     }
 
@@ -2059,6 +2130,7 @@
       try {
         if (!await validateAdvanceReceiptReservationDate()) {
           statusText.textContent = "";
+          updateErrorSummary(true);
           return;
         }
         statusText.textContent = "กำลังบันทึกเอกสาร...";
@@ -2092,6 +2164,29 @@
       }
     });
 
+    function closeClearFormModal() {
+      clearFormModal.classList.remove("open");
+    }
+
+    resetFormButton.addEventListener("click", () => {
+      if (!formHasChanges) {
+        form.reset();
+        return;
+      }
+      clearFormModal.classList.add("open");
+    });
+
+    cancelClearForm.addEventListener("click", closeClearFormModal);
+    clearFormModal.addEventListener("click", (event) => {
+      if (event.target === clearFormModal) closeClearFormModal();
+    });
+    confirmClearForm.addEventListener("click", () => {
+      closeClearFormModal();
+      form.reset();
+    });
+    form.addEventListener("input", () => { formHasChanges = true; });
+    form.addEventListener("change", () => { formHasChanges = true; });
+
     form.addEventListener("reset", () => {
       const currentDocumentType = documentType.value;
       window.setTimeout(() => {
@@ -2103,6 +2198,9 @@
         updateAdvanceReceiptControls();
         createItemRow();
         statusText.textContent = "";
+        errorSummary.hidden = true;
+        errorSummary.innerHTML = "";
+        formHasChanges = false;
       });
     });
 

@@ -644,11 +644,36 @@
 
     .pagination-shell {
       display: flex;
+      align-items: center;
       justify-content: flex-end;
+      gap: 12px;
       margin-top: 14px;
       color: var(--muted);
       font-size: 0.9rem;
     }
+
+    .pagination-actions { display: inline-flex; gap: 8px; }
+    .pagination-button { min-height: 36px; padding: 6px 10px; }
+    .pagination-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .document-status-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 25px;
+      padding: 3px 9px;
+      border: 1px solid #b8e2d8;
+      border-radius: 999px;
+      color: #067647;
+      background: #ecfdf3;
+      font-size: 0.78rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .document-status-badge.reserved { color: #a15c00; border-color: #fed7aa; background: #fff7ed; }
+    .document-status-badge.cancelled { color: var(--danger); border-color: #fecdd3; background: var(--danger-soft); }
+    .document-status-badge.draft { color: #475467; border-color: #d0d5dd; background: #f2f4f7; }
+    .document-status-badge.unknown { color: #667085; border-color: #d0d5dd; background: #f8fafc; }
 
     .modal-backdrop {
       position: fixed;
@@ -792,11 +817,11 @@
         </div>
       </div>
       <div class="hero-actions">
-        <a class="button ghost active" href="dashboard-page.html" aria-current="page"><i data-lucide="layout-dashboard" aria-hidden="true"></i>Dashboard</a>
-        <a class="button ghost" href="report-page.html"><i data-lucide="file-text" aria-hidden="true"></i>Report</a>
+        <a class="button ghost active" href="dashboard-page.html" aria-current="page"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
+        <a class="button ghost" href="report-page.html"><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
         <a class="button ghost" href="monthly-work-page.html"><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
-        <a class="button ghost" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>Work List</a>
-        <a class="button" href="create-invoice-page.html"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้าง Invoice</a>
+        <a class="button ghost" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
+        <a class="button" href="create-invoice-page.html"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้างเอกสาร</a>
       </div>
     </header>
 
@@ -834,13 +859,14 @@
         <div class="table-wrap" id="tableView">
           <table>
             <colgroup>
-              <col style="width: 22%">
-              <col style="width: 14%">
+              <col style="width: 19%">
               <col style="width: 12%">
-              <col style="width: 18%">
-              <col style="width: 14%">
+              <col style="width: 10%">
+              <col style="width: 15%">
+              <col style="width: 9%">
+              <col style="width: 17%">
+              <col style="width: 5%">
               <col style="width: 6%">
-              <col style="width: 7%">
               <col style="width: 7%">
             </colgroup>
             <thead>
@@ -849,6 +875,7 @@
                 <th>หมายเลขเอกสาร</th>
                 <th>วันที่ออกเอกสาร</th>
                 <th>ประเภทเอกสาร</th>
+                <th>สถานะ</th>
                 <th>ใบกำกับภาษี</th>
                 <th>ไฟล์</th>
                 <th>แก้ไข</th>
@@ -1068,12 +1095,11 @@
       const keyword = searchInput.value.trim().toLowerCase();
       const result = await fetchInvoices({
         keyword,
-        page: paginationState.page,
-        pageSize: paginationState.pageSize
+        page: 1,
+        pageSize: 1000
       });
 
       invoiceRecords = result.data;
-      paginationState.total = result.count;
     }
 
     function getFilteredRecords() {
@@ -1081,7 +1107,8 @@
     }
 
     function getPaginatedRecords(records) {
-      return records;
+      const start = (paginationState.page - 1) * paginationState.pageSize;
+      return records.slice(start, start + paginationState.pageSize);
     }
 
     function getFolderRecords(records) {
@@ -1200,6 +1227,7 @@
           <td class="invoice-no">${escapeHtml(record.invoice_number)}</td>
           <td>${escapeHtml(formatDisplayDate(record.document_date))}</td>
           <td>${escapeHtml(record.document_type)}</td>
+          <td>${renderDocumentStatusBadge(record.document_status, record.document_status_raw)}</td>
           <td>${renderCreateReceiptAction(record)}</td>
           <td><button class="action-button file-button" type="button" data-file-id="${escapeHtml(record.id)}" aria-label="เปิดไฟล์ PDF" title="เปิดไฟล์ PDF"><span class="file-icon" aria-hidden="true"></span></button></td>
           <td><a class="action-link" href="${getEditUrl(record.id)}">แก้ไข</a></td>
@@ -1216,6 +1244,7 @@
             <span>หมายเลขเอกสาร: <strong>${escapeHtml(record.invoice_number)}</strong></span>
             <span>วันที่ออกเอกสาร: <strong>${escapeHtml(formatDisplayDate(record.document_date))}</strong></span>
             <span>ประเภทเอกสาร: <strong>${escapeHtml(record.document_type)}</strong></span>
+            <span>สถานะ: ${renderDocumentStatusBadge(record.document_status, record.document_status_raw)}</span>
           </div>
           <div class="actions">
             ${canCreateReceipt(record) ? `<a class="action-link receipt" href="${getCreateReceiptUrl(record.id)}">สร้างใบกำกับภาษี</a>` : ""}
@@ -1225,6 +1254,16 @@
           </div>
         </article>
       `).join("");
+    }
+
+    function renderDocumentStatusBadge(status, rawStatus) {
+      if (rawStatus === null) {
+        return '<span class="document-status-badge unknown">-</span>';
+      }
+      const value = String(status || "").toLowerCase();
+      const labels = { issued: "Issued", reserved: "Reserved", cancelled: "Cancelled", draft: "Draft" };
+      const safeClass = labels[value] ? value : "unknown";
+      return `<span class="document-status-badge ${safeClass}">${labels[value] || "-"}</span>`;
     }
 
     function buildDashboardPdfHtml(record) {
@@ -1387,13 +1426,17 @@
       }
 
       const filteredRecords = getFilteredRecords();
-      const folderRecords = getPaginatedRecords(getFolderRecords(filteredRecords));
+      const allFolderRecords = getFolderRecords(filteredRecords);
+      paginationState.total = allFolderRecords.length;
+      const lastPage = Math.max(1, Math.ceil(paginationState.total / paginationState.pageSize));
+      if (paginationState.page > lastPage) paginationState.page = lastPage;
+      const folderRecords = getPaginatedRecords(allFolderRecords);
       const selectedRecord = folderRecords.find((record) => record.id === selectedRecordId);
       const isDetailMode = Boolean(selectedRecord);
       const records = isDetailMode ? getRecordsInFolder(filteredRecords, selectedRecord.id) : folderRecords;
       const hasRecords = folderRecords.length > 0;
 
-      folderCount.textContent = String(folderRecords.length);
+      folderCount.textContent = String(allFolderRecords.length);
       documentCount.textContent = String(filteredRecords.length);
 
       emptyState.style.display = hasRecords ? "none" : "flex";
@@ -1414,9 +1457,37 @@
         ? `${selectedRecord.customer_name || "-"} | ${selectedRecord.invoice_number || "-"}`
         : "รายละเอียดเอกสาร";
 
-      paginationInfo.textContent = hasRecords && !isDetailMode
-        ? `แสดง ${records.length} Folder จาก ${folderRecords.length} Folder`
-        : "";
+      renderPagination(hasRecords, isDetailMode);
+    }
+
+    function renderPagination(hasRecords, isDetailMode) {
+      if (!hasRecords || isDetailMode) {
+        paginationInfo.innerHTML = "";
+        return;
+      }
+
+      const pageSize = paginationState.pageSize;
+      const total = paginationState.total;
+      const first = total ? ((paginationState.page - 1) * pageSize) + 1 : 0;
+      const last = Math.min(paginationState.page * pageSize, total);
+      const lastPage = Math.max(1, Math.ceil(total / pageSize));
+      paginationInfo.innerHTML = `
+        <span>แสดง ${first}-${last} จากทั้งหมด ${total} รายการ</span>
+        <span class="pagination-actions">
+          <button class="button secondary pagination-button" type="button" id="previousPageButton" ${paginationState.page === 1 ? "disabled" : ""}>ก่อนหน้า</button>
+          <button class="button secondary pagination-button" type="button" id="nextPageButton" ${paginationState.page >= lastPage ? "disabled" : ""}>ถัดไป</button>
+        </span>`;
+
+      document.querySelector("#previousPageButton")?.addEventListener("click", () => {
+        paginationState.page -= 1;
+        selectedRecordId = "";
+        renderDocuments();
+      });
+      document.querySelector("#nextPageButton")?.addEventListener("click", () => {
+        paginationState.page += 1;
+        selectedRecordId = "";
+        renderDocuments();
+      });
     }
 
     async function deleteRecord(id) {
@@ -1454,9 +1525,7 @@
     });
 
     logoutButton.addEventListener("click", async () => {
-      await supabaseClient.auth.signOut();
-      sessionStorage.removeItem(LOGIN_USERNAME_KEY);
-      window.location.href = "login-page.html";
+      await signOutOfYind();
     });
 
     cancelDelete.addEventListener("click", () => {

@@ -60,6 +60,7 @@ function mapDbInvoice(record) {
     document_group: record.document_group,
     document_year: record.document_year,
     document_status: record.document_status || "issued",
+    document_status_raw: record.document_status ?? null,
     source_invoice_id: record.source_invoice_id,
     customer_address: record.customer_address,
     tax_id: record.tax_id,

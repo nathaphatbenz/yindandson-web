@@ -51,6 +51,8 @@
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1); }
     .status { min-height: 22px; margin: 0 0 14px; color: var(--success); font-weight: 800; }
     .status.error { color: var(--danger); }
+    .read-only-banner { display: none; margin: 0 0 14px; padding: 12px 14px; border: 1px solid #fed7aa; border-radius: 8px; color: #9a5b00; background: #fff7ed; font-weight: 800; }
+    .read-only-banner.show { display: block; }
     .section-card { margin-top: 18px; overflow: hidden; }
     .section-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px; border-bottom: 1px solid var(--line); }
     h2 { margin: 0; font-size: 1.1rem; letter-spacing: 0; }
@@ -96,6 +98,8 @@
     .employee-summary-table td:last-child { color: #0f5f5a; text-align: right; font-weight: 900; white-space: nowrap; }
     .section-tools { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: #fbfcfe; }
     .section-tools .field { flex: 1 1 190px; min-width: 0; }
+    .toggle-field { display: inline-flex; align-items: center; min-height: 38px; gap: 8px; color: #344054; font-size: 0.88rem; font-weight: 800; white-space: nowrap; }
+    .toggle-field input { width: 18px; height: 18px; accent-color: var(--primary); }
     .shared-section { border-color: #d9d6ef; background: #fcfbff; }
     .shared-section .section-head, .shared-section .section-tools { background: #f7f5ff; border-color: #e4e0f3; }
     .empty-row { padding: 22px; color: var(--muted); text-align: center; }
@@ -128,10 +132,11 @@
         <p class="subtitle">บันทึกงานรถ รายการเบิกพนักงาน และรายการเบิกรถร่วม</p>
       </div>
       <nav class="page-nav" aria-label="เมนูหลัก">
-        <a class="nav-link" href="dashboard-page.html">Dashboard</a>
-        <a class="nav-link" href="create-invoice-page.html">Create Invoice</a>
-        <a class="nav-link" href="report-page.html">Report</a>
+        <a class="nav-link" href="dashboard-page.html">แดชบอร์ด</a>
+        <a class="nav-link" href="create-invoice-page.html">สร้างเอกสาร</a>
+        <a class="nav-link" href="report-page.html">รายงาน</a>
         <a class="nav-link active" href="monthly-work-page.html" aria-current="page">บันทึกงานรายเดือน</a>
+        <button class="nav-link" id="logoutButton" type="button">ออกจากระบบ</button>
       </nav>
     </header>
 
@@ -156,6 +161,7 @@
     </section>
 
     <p class="status" id="statusMessage" aria-live="polite"></p>
+    <p class="read-only-banner" id="readOnlyBanner" role="status">คุณมีสิทธิ์ดูข้อมูลเท่านั้น ไม่สามารถแก้ไขหรือบันทึกข้อมูลได้</p>
 
     <section class="summary-grid" aria-label="สรุปข้อมูลรายเดือน">
       <article class="summary-card"><span class="summary-label">จำนวนรถที่มีงาน</span><strong id="activeVehicleCount">0 คัน</strong></article>
@@ -179,6 +185,7 @@
           <label for="workSearchInput">ค้นหารถหรือรายละเอียดงาน</label>
           <input id="workSearchInput" type="search" placeholder="เช่น 7741, ชื่อลูกค้า, สถานที่">
         </div>
+        <label class="toggle-field" for="showEmptyWorkRows"><input id="showEmptyWorkRows" type="checkbox">แสดงรายการว่าง</label>
       </div>
       <div class="table-scroll work-table-scroll">
         <table class="work-table">
@@ -251,14 +258,17 @@
     const sectionFilter = document.querySelector("#sectionFilter");
     const vehicleFilter = document.querySelector("#vehicleFilter");
     const workSearchInput = document.querySelector("#workSearchInput");
+    const showEmptyWorkRows = document.querySelector("#showEmptyWorkRows");
     const employeeSearchInput = document.querySelector("#employeeSearchInput");
     const exportExcelButton = document.querySelector("#exportExcelButton");
+    const logoutButton = document.querySelector("#logoutButton");
     const vehicleWorkHead = document.querySelector("#vehicleWorkHead");
     const vehicleWorkBody = document.querySelector("#vehicleWorkBody");
     const employeeBody = document.querySelector("#employeeBody");
     const employeeSummaryBody = document.querySelector("#employeeSummaryBody");
     const sharedBody = document.querySelector("#sharedBody");
     const statusMessage = document.querySelector("#statusMessage");
+    const readOnlyBanner = document.querySelector("#readOnlyBanner");
     const workPeriod = document.querySelector("#workPeriod");
     const saveButton = document.querySelector("#saveButton");
     const activeVehicleCount = document.querySelector("#activeVehicleCount");
@@ -421,8 +431,10 @@
       }
       const selectedVehicle = vehicleFilter.value || "all";
       const keyword = workSearchInput.value.trim().toLowerCase();
+      const showEmptyRows = showEmptyWorkRows.checked;
       vehicleWorkHead.innerHTML = "<th>วันที่</th><th>รถ</th><th>รายละเอียดงาน</th>";
       vehicleWorkBody.innerHTML = "";
+      let visibleRowCount = 0;
       for (let day = 1; day <= daysInMonth(period.year, period.month); day += 1) {
         const date = toGregorianDate(period.year, period.month, day);
         const calendarDate = new Date(period.year - 543, period.month - 1, day);
@@ -431,14 +443,19 @@
           const value = vehicleWorkLogs.get(date + "|" + vehicle) || "";
           const matchesVehicle = selectedVehicle === "all" || selectedVehicle === vehicle;
           const matchesKeyword = !keyword || (vehicle + " " + value).toLowerCase().includes(keyword);
-          if (!matchesVehicle || !matchesKeyword) return;
+          const hasWorkDetail = String(value || "").trim() !== "";
+          if (!matchesVehicle || !matchesKeyword || (!showEmptyRows && !hasWorkDetail)) return;
           const row = document.createElement("tr");
           if (isWeekend) row.classList.add("weekend");
           row.innerHTML = '<td class="day-cell"><span class="day-number">' + day + '</span><span class="day-week">' + getWeekday(calendarDate) + "</span></td>" +
             '<td><span class="vehicle-label">' + escapeHtml(vehicle) + "</span></td>" +
             '<td><textarea data-work-date="' + date + '" data-vehicle="' + vehicle + '" aria-label="วันที่ ' + day + " รถ " + vehicle + '" placeholder="ลูกค้า / สถานที่ / งาน / เที่ยว / หมายเหตุ">' + escapeHtml(value) + "</textarea></td>";
           vehicleWorkBody.appendChild(row);
+          visibleRowCount += 1;
         });
+      }
+      if (visibleRowCount === 0) {
+        vehicleWorkBody.innerHTML = '<tr><td class="empty-row" colspan="3">ยังไม่มีรายการงานที่บันทึกไว้ เปิด “แสดงรายการว่าง” เพื่อเริ่มกรอกข้อมูล</td></tr>';
       }
       workPeriod.textContent = MONTH_NAMES[period.month - 1] + " " + period.year + " (" + daysInMonth(period.year, period.month) + " วัน)";
       updateMonthlySummary();
@@ -456,6 +473,7 @@
         data.employeeWithdrawals.forEach(addEmployeeRow);
         data.sharedVehicleWithdrawals.forEach(addSharedRow);
         renderEmployeeSummary();
+        applyMonthlyWorkReadOnlyState();
         setStatus("");
       } catch (error) {
         console.error(error);
@@ -463,6 +481,7 @@
         employeeBody.innerHTML = "";
         sharedBody.innerHTML = "";
         renderEmployeeSummary();
+        applyMonthlyWorkReadOnlyState();
         setStatus(error.message || "โหลดข้อมูลไม่สำเร็จ", true);
       } finally {
         saveButton.disabled = false;
@@ -626,6 +645,27 @@
       const { data } = await supabaseClient.auth.getSession();
       canSaveMonthlyWork = getYindUsernameFromSession(data.session) === "ntpbenz";
       saveButton.hidden = !canSaveMonthlyWork;
+      readOnlyBanner.classList.toggle("show", !canSaveMonthlyWork);
+      applyMonthlyWorkReadOnlyState();
+    }
+
+    function applyMonthlyWorkReadOnlyState() {
+      const isReadOnly = !canSaveMonthlyWork;
+      const controls = document.querySelectorAll([
+        "#vehicleSection textarea",
+        "#employeeSection .withdrawal-date",
+        "#employeeSection .employee-name",
+        "#employeeSection .amount",
+        "#employeeSection .withdrawal-note",
+        "#sharedSection input",
+        "#sharedSection textarea",
+        "#sharedSection select",
+        "#addEmployeeButton",
+        "#addSharedButton",
+        "#clearButton",
+        ".row-delete"
+      ].join(","));
+      controls.forEach(function (control) { control.disabled = isReadOnly; });
     }
 
     document.querySelector("#addEmployeeButton").addEventListener("click", function () { addEmployeeRow(); });
@@ -637,6 +677,7 @@
     sectionFilter.addEventListener("change", updateVisibleSection);
     vehicleFilter.addEventListener("change", function () { renderVehicleWorkTable(); });
     workSearchInput.addEventListener("input", function () { renderVehicleWorkTable(); });
+    showEmptyWorkRows.addEventListener("change", function () { renderVehicleWorkTable(); });
     vehicleWorkBody.addEventListener("input", function (event) {
       const input = event.target.closest("textarea[data-work-date]");
       if (!input) return;
@@ -651,6 +692,7 @@
     bindRowDeletes(employeeBody, renderEmployeeSummary);
     bindRowDeletes(sharedBody, updateMonthlySummary);
     exportExcelButton.addEventListener("click", exportExcel);
+    logoutButton.addEventListener("click", signOutOfYind);
     initializeFilters();
     updateVisibleSection();
     renderEmployeeSummary();

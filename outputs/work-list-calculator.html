@@ -447,6 +447,14 @@
       padding-bottom: 18px;
     }
 
+    .database-note {
+      max-width: 720px;
+      margin: 8px 0 0;
+      color: #475467;
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
     .database-controls {
       display: grid;
       grid-template-columns: 1fr auto auto;
@@ -742,20 +750,21 @@
         </div>
       </div>
       <div class="actions">
-        <a class="dashboard-link" href="dashboard-page.html" title="กลับไปยัง Dashboard">
+        <a class="dashboard-link" href="dashboard-page.html" title="กลับไปยังแดชบอร์ด">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M9 12h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
-          กลับ Dashboard
+          แดชบอร์ด
         </a>
-        <button class="secondary" type="button" id="pdfBtn" title="บันทึกเป็นไฟล์ PDF">
+        <button class="primary" type="button" id="pdfBtn" title="บันทึกเป็นไฟล์ PDF">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
             <path d="M14 3v6h6M9 15h6M12 12v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           บันทึก PDF
         </button>
+        <button class="secondary" type="button" id="logoutButton">ออกจากระบบ</button>
       </div>
     </header>
 
@@ -824,6 +833,7 @@
             <div>
               <h2>ค้นหารายการเก่า</h2>
               <p>ค้นหารายการเดิมจากทะเบียนหรือคำอธิบาย</p>
+              <p class="database-note">ส่วนนี้ใช้ค้นหาประวัติที่บันทึกไว้ในระบบเดิม ส่วนรายการที่สร้างในหน้านี้จะถูกบันทึกเป็น PDF เท่านั้น</p>
             </div>
           </div>
           <div class="database-controls">
@@ -862,7 +872,6 @@
           <div class="registration-row">
             <textarea id="summaryNote" placeholder="กรอกทะเบียน"></textarea>
             <div class="registration-actions">
-              <button class="primary" type="button" id="saveToSupabaseBtn">บันทึก PDF</button>
               <button class="secondary" type="button" id="clearFormBtn">ล้างข้อมูล</button>
             </div>
           </div>
@@ -903,8 +912,8 @@
     const addRowBtn = document.getElementById("addRowBtn");
     const addExpenseBtn = document.getElementById("addExpenseBtn");
     const pdfBtn = document.getElementById("pdfBtn");
+    const logoutButton = document.getElementById("logoutButton");
     const historySearchInput = document.getElementById("historySearchInput");
-    const saveToSupabaseBtn = document.getElementById("saveToSupabaseBtn");
     const clearFormBtn = document.getElementById("clearFormBtn");
     const searchSupabaseBtn = document.getElementById("searchSupabaseBtn");
     const databaseStatus = document.getElementById("databaseStatus");
@@ -1558,7 +1567,15 @@
     addRowBtn.addEventListener("click", () => createRow());
     addExpenseBtn.addEventListener("click", () => createExpenseRow());
     pdfBtn.addEventListener("click", openPdfSaveDialog);
-    saveToSupabaseBtn.addEventListener("click", openPdfSaveDialog);
+    logoutButton.addEventListener("click", async () => {
+      try {
+        const client = await getSupabaseClient();
+        await client.auth.signOut();
+      } finally {
+        sessionStorage.removeItem("yind_login_username");
+        window.location.href = "login-page.html";
+      }
+    });
     clearFormBtn.addEventListener("click", clearFormData);
     searchSupabaseBtn.addEventListener("click", searchOldRecords);
     historySearchInput.addEventListener("keydown", (event) => {
