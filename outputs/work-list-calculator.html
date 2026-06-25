@@ -49,7 +49,13 @@
     .app {
       width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 32px 0;
+      padding: 28px 0 40px;
+    }
+
+    .top-utility {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
     }
 
     .topbar {
@@ -81,7 +87,7 @@
 
     h1 {
       margin: 0;
-      font-size: clamp(26px, 4vw, 40px);
+      font-size: 2rem;
       line-height: 1.15;
       letter-spacing: 0;
     }
@@ -736,6 +742,9 @@
 </head>
 <body>
   <main class="app">
+    <div class="top-utility">
+      <button class="secondary" type="button" id="logoutButton">ออกจากระบบ</button>
+    </div>
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">
@@ -764,7 +773,6 @@
           </svg>
           บันทึก PDF
         </button>
-        <button class="secondary" type="button" id="logoutButton">ออกจากระบบ</button>
       </div>
     </header>
 

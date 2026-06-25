@@ -33,10 +33,12 @@
     }
 
     .page {
-      width: min(1120px, calc(100% - 32px));
+      width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 36px 0;
+      padding: 28px 0 40px;
     }
+
+    .top-utility { display: flex; justify-content: flex-end; margin-bottom: 12px; }
 
     .hero, .toolbar, .table-heading, .summary-grid, .actions {
       display: flex;
@@ -58,7 +60,7 @@
     }
 
     h1, h2, p { margin-top: 0; }
-    h1 { margin-bottom: 5px; font-size: 2.3rem; letter-spacing: 0; }
+    h1 { margin-bottom: 5px; font-size: 2rem; letter-spacing: 0; }
     h2 { margin: 0; font-size: 1.12rem; letter-spacing: 0; }
     .subtitle { margin-bottom: 0; color: var(--muted); }
 
@@ -183,7 +185,7 @@
     @media (max-width: 760px) {
       .page { width: min(100% - 20px, 680px); padding: 22px 0; }
       .hero, .toolbar { align-items: stretch; flex-direction: column; }
-      h1 { font-size: 1.85rem; }
+      h1 { font-size: 1.8rem; }
       .hero-actions .button, .toolbar .button { width: 100%; }
       .filters { display: grid; grid-template-columns: 1fr 1fr; }
       .filter-field { min-width: 0; }
@@ -197,6 +199,9 @@
 </head>
 <body>
   <main class="page">
+    <div class="top-utility">
+      <button class="button ghost" id="logoutButton" type="button"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
+    </div>
     <header class="hero">
       <div>
         <p class="eyebrow">YinD &amp; Son</p>
@@ -205,11 +210,11 @@
       </div>
       <nav class="hero-actions" aria-label="เมนูหลัก">
         <a class="button ghost" href="dashboard-page.html"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
-        <a class="button ghost" href="create-invoice-page.html"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้างเอกสาร</a>
-        <a class="button ghost active" href="report-page.html" aria-current="page"><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
-        <a class="button ghost" href="monthly-work-page.html"><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
+        <a class="button ghost active" href="report-page.html" aria-current="page" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
+        <a class="button ghost" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
+        <a class="button ghost" href="monthly-summary-page.html" data-hide-yodsapong hidden><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>สรุปรายเดือน</a>
         <a class="button ghost" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
-        <button class="button ghost" id="logoutButton" type="button"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
+        <a class="button ghost" href="create-invoice-page.html"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้างเอกสาร</a>
       </nav>
     </header>
 
@@ -274,10 +279,16 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
     const LOGIN_USERNAME_KEY = "yind_login_username";
+    const currentLoginUsername = sessionStorage.getItem(LOGIN_USERNAME_KEY);
     document.querySelectorAll("[data-ntpbenz-only]").forEach((element) => {
-      const isNtpbenz = sessionStorage.getItem(LOGIN_USERNAME_KEY) === "ntpbenz";
+      const isNtpbenz = currentLoginUsername === "ntpbenz";
       element.hidden = !isNtpbenz;
       element.style.display = isNtpbenz ? "" : "none";
+    });
+    document.querySelectorAll("[data-hide-yodsapong]").forEach((element) => {
+      const shouldHide = currentLoginUsername === "yodsapong";
+      element.hidden = shouldHide;
+      element.style.display = shouldHide ? "none" : "";
     });
     if (window.lucide) {
       window.lucide.createIcons();

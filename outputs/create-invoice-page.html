@@ -37,10 +37,12 @@
     }
 
     main {
-      width: min(1120px, calc(100% - 32px));
+      width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 28px 0 36px;
+      padding: 28px 0 40px;
     }
+
+    .top-utility { display: flex; justify-content: flex-end; margin-bottom: 12px; }
 
     .page-header {
       display: flex;
@@ -505,6 +507,17 @@
       padding-top: 22px;
     }
 
+    .pdf-language-option {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 14px;
+    }
+
+    .pdf-language-option .checkbox-label {
+      width: min(100%, 340px);
+      min-height: 42px;
+    }
+
     button {
       min-height: 42px;
       border: 1px solid transparent;
@@ -573,7 +586,7 @@
 
     @media (max-width: 760px) {
       main {
-        width: min(100% - 24px, 1120px);
+        width: min(100% - 20px, 680px);
         padding: 24px 0;
       }
 
@@ -651,6 +664,9 @@
 </head>
 <body>
   <main>
+    <div class="top-utility">
+      <button class="nav-link" type="button" id="logoutButton"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
+    </div>
     <header class="page-header">
       <div>
         <p class="eyebrow">YinD&Son</p>
@@ -659,11 +675,11 @@
 
       <nav class="page-nav" aria-label="เมนูหลัก">
         <a class="nav-link" href="dashboard-page.html"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
-        <a class="nav-link active" href="create-invoice-page.html" aria-current="page"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้างเอกสาร</a>
-        <a class="nav-link" href="report-page.html"><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
-        <a class="nav-link" href="monthly-work-page.html"><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
+        <a class="nav-link" href="report-page.html" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
+        <a class="nav-link" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
+        <a class="nav-link" href="monthly-summary-page.html" data-hide-yodsapong hidden><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>สรุปรายเดือน</a>
         <a class="nav-link" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
-        <button class="nav-link" type="button" id="logoutButton"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
+        <a class="nav-link active" href="create-invoice-page.html" aria-current="page"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้างเอกสาร</a>
       </nav>
     </header>
 
@@ -765,6 +781,12 @@
         </div>
 
         <div class="error-summary" id="errorSummary" role="alert" hidden></div>
+        <div class="pdf-language-option">
+          <label class="checkbox-label" for="englishPdfCheckbox">
+            บันทึกไฟล์เป็นภาษาอังกฤษ
+            <input id="englishPdfCheckbox" type="checkbox">
+          </label>
+        </div>
         <div class="actions">
           <button class="secondary" id="resetFormButton" type="button">ล้างข้อมูล</button>
           <button class="primary" type="submit">บันทึกเอกสาร</button>
@@ -788,10 +810,16 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
     const LOGIN_USERNAME_KEY = "yind_login_username";
+    const currentLoginUsername = sessionStorage.getItem(LOGIN_USERNAME_KEY);
     document.querySelectorAll("[data-ntpbenz-only]").forEach((element) => {
-      const isNtpbenz = sessionStorage.getItem(LOGIN_USERNAME_KEY) === "ntpbenz";
+      const isNtpbenz = currentLoginUsername === "ntpbenz";
       element.hidden = !isNtpbenz;
       element.style.display = isNtpbenz ? "" : "none";
+    });
+    document.querySelectorAll("[data-hide-yodsapong]").forEach((element) => {
+      const shouldHide = currentLoginUsername === "yodsapong";
+      element.hidden = shouldHide;
+      element.style.display = shouldHide ? "none" : "";
     });
     if (window.lucide) {
       window.lucide.createIcons();
@@ -814,6 +842,7 @@
     const customerCompanyInput = document.querySelector("#customerCompany");
     const customerAddressInput = document.querySelector("#customerAddress");
     const taxIdInput = document.querySelector("#taxId");
+    const englishPdfCheckbox = document.querySelector("#englishPdfCheckbox");
     let formHasChanges = false;
     const customerCompanyOptions = document.querySelector("#customerCompanyOptions");
     const advanceReceiptField = document.querySelector("#advanceReceiptField");
@@ -836,6 +865,84 @@
     const INVOICE_STORAGE_KEY = "yind_invoice_documents";
     const DEFAULT_DOCUMENT_TYPE = "ใบวางบิล / ใบแจ้งหนี้";
     const RECEIPT_DOCUMENT_TYPE = "ใบกำกับภาษี / ใบเสร็จรับเงิน";
+    const PDF_LABELS = {
+      th: {
+        htmlLang: "th",
+        original: "ต้นฉบับ",
+        billingTitle: "ใบวางบิล / ใบแจ้งหนี้",
+        receiptTitle: "ใบกำกับภาษี / ใบเสร็จรับเงิน",
+        customerName: "ชื่อลูกค้า / Customers:",
+        customerAddress: "ที่อยู่ / Address:",
+        taxId: "เลขประจำตัวผู้เสียภาษี",
+        documentNo: "เลขที่ / No.",
+        documentDate: "วันที่ / Date",
+        no: "ลำดับที่<br>Item",
+        description: "รายการ<br>Description",
+        quantity: "จำนวน<br>Quantity",
+        unitPrice: "ราคา/หน่วย<br>Unit Price",
+        amount: "จำนวนเงิน<br>Amount",
+        subtotal: "รวมเงิน<br>TOTAL",
+        vat: "ภาษีมูลค่าเพิ่ม<br>( VAT 7% )",
+        grandTotal: "ยอดเงินสุทธิ<br>NET AMOUNT",
+        amountInWords: "ตัวอักษร",
+        referenceBillingNote: "อ้างอิงจากใบวางบิล",
+        billingNotes: [
+          "ได้รับสินค้าตามรายการข้างบนนี้ถูกต้องแล้ว",
+          "บริษัท ฯ จะออกใบเสร็จรับเงิน เมื่อมีการชำระเงินเรียบร้อยแล้ว",
+          "โปรดสั่งจ่ายเช็คขีดคร่อมในนามของ &quot;บริษัท ยินดีแอนด์ซันส์ จำกัด&quot; เท่านั้น"
+        ],
+        cash: "เงินสด",
+        transfer: "โอน ..........................................",
+        cheque: "เช็ค ..........................................",
+        receiverProduct: "ผู้รับสินค้า",
+        senderProduct: "ผู้ส่งสินค้า",
+        companySignature: "ในนาม บริษัท ยินดีแอนด์ซันส์ จำกัด",
+        receiverMoney: "ผู้รับเงิน",
+        signatureDate: "วันที่",
+        companyName: "บริษัท ยินดีแอนด์ซันส์ จำกัด",
+        officeAddress: "สำนักงานใหญ่ 155/101 หมู่ที่ 10 ตำบลสุรศักดิ์ อำเภอศรีราชา จังหวัดชลบุรี 20110",
+        phone: "โทร 081-4529760",
+        companyTaxId: "เลขประจำตัวผู้เสียภาษีอากร&nbsp;&nbsp;0 2055 60022 22 3"
+      },
+      en: {
+        htmlLang: "en",
+        original: "Original",
+        billingTitle: "Billing Note / Invoice",
+        receiptTitle: "Receipt / Tax Invoice",
+        customerName: "Customer Name:",
+        customerAddress: "Customer Address:",
+        taxId: "Tax ID:",
+        documentNo: "Document No.",
+        documentDate: "Document Date",
+        no: "No.",
+        description: "Description",
+        quantity: "Quantity",
+        unitPrice: "Unit Price",
+        amount: "Amount",
+        subtotal: "Subtotal",
+        vat: "VAT 7%",
+        grandTotal: "Grand Total",
+        amountInWords: "Amount in Words",
+        referenceBillingNote: "Reference Billing Note:",
+        billingNotes: [
+          "Goods/services listed above have been received correctly.",
+          "The company will issue a receipt after payment is completed.",
+          "Please make crossed cheques payable to &quot;Yindee and Sons Co., Ltd.&quot; only."
+        ],
+        cash: "Cash",
+        transfer: "Transfer ..........................................",
+        cheque: "Cheque ..........................................",
+        receiverProduct: "Receiver",
+        senderProduct: "Delivered by",
+        companySignature: "For Yindee and Sons Co., Ltd.",
+        receiverMoney: "Received by",
+        signatureDate: "Date",
+        companyName: "Yindee and Sons Co., Ltd.",
+        officeAddress: "Head Office 155/101 Moo 10, Surasak Subdistrict, Si Racha District, Chonburi 20110",
+        phone: "Tel. 081-4529760",
+        companyTaxId: "Tax ID&nbsp;&nbsp;0 2055 60022 22 3"
+      }
+    };
     const pageParams = new URLSearchParams(window.location.search);
     const editingInvoiceId = pageParams.get("id");
     const receiptSourceId = pageParams.get("receiptFrom");
@@ -1384,6 +1491,33 @@
       return `${day} / ${month} / ${year + 543}`;
     }
 
+    function formatEnglishDate(dateValue) {
+      if (!dateValue) {
+        return "";
+      }
+
+      const [year, month, day] = dateValue.split("-").map(Number);
+      return `${String(day).padStart(2, "0")} / ${String(month).padStart(2, "0")} / ${year}`;
+    }
+
+    function getPdfLanguage() {
+      return englishPdfCheckbox.checked ? "en" : "th";
+    }
+
+    function getPdfDateText(dateValue, language) {
+      return language === "en" ? formatEnglishDate(dateValue) : formatThaiDate(dateValue);
+    }
+
+    function getPdfDocumentTitle(typeValue, language) {
+      const labels = PDF_LABELS[language] || PDF_LABELS.th;
+      return isReceiptDocument(typeValue) ? labels.receiptTitle : labels.billingTitle;
+    }
+
+    function getPdfFileTitle(documentNumber, language) {
+      const baseName = documentNumber || "YinD-document";
+      return language === "en" ? `${baseName}_EN` : baseName;
+    }
+
     function isReceiptDocument(typeValue) {
       return typeValue === RECEIPT_DOCUMENT_TYPE || String(typeValue || "").includes("ใบเสร็จรับเงิน");
     }
@@ -1539,15 +1673,92 @@
       return `${convertInteger(baht)}บาท${convertInteger(satang)}สตางค์`;
     }
 
+    function englishMoneyText(number) {
+      const ones = [
+        "Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+        "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+        "Seventeen", "Eighteen", "Nineteen"
+      ];
+      const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+
+      function convertBelowThousand(value) {
+        const parts = [];
+        const hundred = Math.floor(value / 100);
+        const rest = value % 100;
+
+        if (hundred) {
+          parts.push(`${ones[hundred]} Hundred`);
+        }
+
+        if (rest) {
+          if (rest < 20) {
+            parts.push(ones[rest]);
+          } else {
+            const ten = Math.floor(rest / 10);
+            const one = rest % 10;
+            parts.push(one ? `${tens[ten]}-${ones[one]}` : tens[ten]);
+          }
+        }
+
+        return parts.join(" ");
+      }
+
+      function convertInteger(value) {
+        if (value === 0) {
+          return ones[0];
+        }
+
+        const units = [
+          { value: 1000000000, label: "Billion" },
+          { value: 1000000, label: "Million" },
+          { value: 1000, label: "Thousand" }
+        ];
+        const parts = [];
+        let rest = value;
+
+        units.forEach((unit) => {
+          const chunk = Math.floor(rest / unit.value);
+          if (chunk) {
+            parts.push(`${convertBelowThousand(chunk)} ${unit.label}`);
+            rest %= unit.value;
+          }
+        });
+
+        if (rest) {
+          parts.push(convertBelowThousand(rest));
+        }
+
+        return parts.join(" ");
+      }
+
+      const rounded = Math.round(number * 100) / 100;
+      const baht = Math.floor(rounded);
+      const satang = Math.round((rounded - baht) * 100);
+      const bahtText = `${convertInteger(baht)} Baht`;
+
+      if (satang === 0) {
+        return `${bahtText} Only`;
+      }
+
+      return `${bahtText} and ${convertInteger(satang)} Satang`;
+    }
+
+    function moneyText(number, language) {
+      return language === "en" ? englishMoneyText(number) : thaiNumberText(number);
+    }
+
     function collectInvoiceData() {
       const typeValue = documentType.value;
       const dateValue = document.querySelector("#invoiceDate").value;
       const subtotalValue = getPlainNumber(subtotal.value);
       const vatValue = getPlainNumber(vatAmount.value);
       const grandTotalValue = getPlainNumber(grandTotal.value);
+      const language = getPdfLanguage();
 
       return {
+        language,
         documentType: typeValue,
+        documentTitle: getPdfDocumentTitle(typeValue, language),
         documentGroup: getDocumentGroup(typeValue),
         documentYear: getDocumentYear(dateValue),
         documentStatus: editingInvoiceId && editingDocumentStatus === "reserved"
@@ -1557,33 +1768,36 @@
         customerCompany: document.querySelector("#customerCompany").value.trim(),
         customerAddress: document.querySelector("#customerAddress").value.trim(),
         taxId: document.querySelector("#taxId").value.trim(),
-        dateText: formatThaiDate(dateValue),
+        dateText: getPdfDateText(dateValue, language),
         items: getInvoiceItems(),
         subtotal: subtotalValue,
         vatAmount: vatValue,
         grandTotal: grandTotalValue,
-        grandTotalText: thaiNumberText(grandTotalValue),
+        grandTotalText: moneyText(grandTotalValue, language),
         referenceInvoiceNumber: isReceiptDocument(typeValue)
           ? currentSourceInvoiceNumber || "-"
           : ""
       };
     }
 
-    function mapRecordToPdfData(record, referenceInvoiceNumber = "") {
+    function mapRecordToPdfData(record, referenceInvoiceNumber = "", language = getPdfLanguage()) {
       const grandTotalValue = Number(record.grandTotal || 0);
+      const typeValue = record.document_type || DEFAULT_DOCUMENT_TYPE;
 
       return {
-        documentType: record.document_type || DEFAULT_DOCUMENT_TYPE,
+        language,
+        documentType: typeValue,
+        documentTitle: getPdfDocumentTitle(typeValue, language),
         documentNumber: record.invoice_number || "",
         customerCompany: record.customer_name || "",
         customerAddress: record.customer_address || "",
         taxId: record.tax_id || "",
-        dateText: formatThaiDate(record.document_date || ""),
+        dateText: getPdfDateText(record.document_date || "", language),
         items: Array.isArray(record.items) ? record.items : [],
         subtotal: Number(record.subtotal || 0),
         vatAmount: Number(record.vatAmount || 0),
         grandTotal: grandTotalValue,
-        grandTotalText: thaiNumberText(grandTotalValue),
+        grandTotalText: moneyText(grandTotalValue, language),
         referenceInvoiceNumber: isReceiptDocument(record.document_type)
           ? referenceInvoiceNumber || "-"
           : ""
@@ -1591,11 +1805,15 @@
     }
 
     function buildPdfDocumentHtml(data) {
+      const language = data.language === "en" ? "en" : "th";
+      const labels = PDF_LABELS[language];
+      const documentTitle = data.documentTitle || getPdfDocumentTitle(data.documentType, language);
+      const fileTitle = getPdfFileTitle(data.documentNumber, language);
       const referenceRow = isReceiptDocument(data.documentType)
         ? `
           <tr class="reference-row">
             <td></td>
-            <td class="description">อ้างอิงจากใบวางบิล ${escapeHtml(data.referenceInvoiceNumber || "-")}</td>
+            <td class="description">${escapeHtml(labels.referenceBillingNote)} ${escapeHtml(data.referenceInvoiceNumber || "-")}</td>
             <td></td>
             <td></td>
             <td></td>
@@ -1623,26 +1841,24 @@
       const isBillingDocument = data.documentType === "ใบวางบิล / ใบแจ้งหนี้";
       const paymentContent = isBillingDocument
         ? `<ol class="billing-notes">
-            <li>ได้รับสินค้าตามรายการข้างบนนี้ถูกต้องแล้ว</li>
-            <li>บริษัท ฯ จะออกใบเสร็จรับเงิน เมื่อมีการชำระเงินเรียบร้อยแล้ว</li>
-            <li>โปรดสั่งจ่ายเช็คขีดคร่อมในนามของ &quot;บริษัท ยินดีแอนด์ซันส์ จำกัด&quot; เท่านั้น</li>
+            ${labels.billingNotes.map((note) => `<li>${note}</li>`).join("")}
           </ol>`
-        : `<div class="check-row"><span class="checkbox"></span> เงินสด</div>
-          <div class="check-row"><span class="checkbox"></span> โอน ..........................................</div>
-          <div class="check-row"><span class="checkbox"></span> เช็ค ..........................................</div>`;
+        : `<div class="check-row"><span class="checkbox"></span> ${labels.cash}</div>
+          <div class="check-row"><span class="checkbox"></span> ${labels.transfer}</div>
+          <div class="check-row"><span class="checkbox"></span> ${labels.cheque}</div>`;
       const signatureContent = isBillingDocument
         ? `<div class="signature signature-billing">
-            <div>ผู้รับสินค้า</div>
-            <div>ผู้ส่งสินค้า</div>
-            <div>ในนาม บริษัท ยินดีแอนด์ซันส์ จำกัด</div>
+            <div>${labels.receiverProduct}</div>
+            <div>${labels.senderProduct}</div>
+            <div>${labels.companySignature}</div>
           </div>`
-        : `<div class="signature"><div>ผู้รับเงิน</div><div>วันที่</div></div>`;
+        : `<div class="signature"><div>${labels.receiverMoney}</div><div>${labels.signatureDate}</div></div>`;
 
       return `<!DOCTYPE html>
-<html lang="th">
+<html lang="${labels.htmlLang}">
 <head>
   <meta charset="UTF-8">
-  <title>${escapeHtml(data.documentNumber)}</title>
+  <title>${escapeHtml(fileTitle)}</title>
   <style>
     @page { size: A4; margin: 7mm; }
     * {
@@ -1951,30 +2167,30 @@
 </head>
 <body>
   <div class="sheet">
-    <div class="top-note">ต้นฉบับ</div>
+    <div class="top-note">${labels.original}</div>
     <div class="header">
       <div>
         <div class="brand">
           <div class="logo"><img src="${YIND_LOGO_DATA_URL}" alt="YinD and Sons logo"></div>
-          <div class="company-name">บริษัท ยินดีแอนด์ซันส์ จำกัด</div>
+          <div class="company-name">${labels.companyName}</div>
         </div>
         <div class="company-lines">
-          <div>สำนักงานใหญ่ 155/101 หมู่ที่ 10 ตำบลสุรศักดิ์ อำเภอศรีราชา จังหวัดชลบุรี 20110</div>
-          <div>โทร 081-4529760</div>
-          <div>เลขประจำตัวผู้เสียภาษีอากร&nbsp;&nbsp;0 2055 60022 22 3</div>
+          <div>${labels.officeAddress}</div>
+          <div>${labels.phone}</div>
+          <div>${labels.companyTaxId}</div>
         </div>
       </div>
-      <div class="doc-title">${escapeHtml(data.documentType)}</div>
+      <div class="doc-title">${escapeHtml(documentTitle)}</div>
     </div>
     <div class="info-grid">
       <div class="box customer-box">
-        <div class="customer-row"><strong>ชื่อลูกค้า / Customers:</strong><div>${escapeHtml(data.customerCompany)}</div></div>
-        <div class="customer-row"><strong>ที่อยู่ / Address:</strong><div>${escapeHtml(data.customerAddress).replaceAll("\n", "<br>")}</div></div>
-        <div class="customer-row"><strong>เลขประจำตัวผู้เสียภาษี</strong><div>${escapeHtml(data.taxId)}</div></div>
+        <div class="customer-row"><strong>${labels.customerName}</strong><div>${escapeHtml(data.customerCompany)}</div></div>
+        <div class="customer-row"><strong>${labels.customerAddress}</strong><div>${escapeHtml(data.customerAddress).replaceAll("\n", "<br>")}</div></div>
+        <div class="customer-row"><strong>${labels.taxId}</strong><div>${escapeHtml(data.taxId)}</div></div>
       </div>
       <div class="box doc-box">
-        <div class="doc-row"><strong>เลขที่ / No.</strong><div class="doc-number">${escapeHtml(data.documentNumber)}</div></div>
-        <div class="doc-row"><strong>วันที่ / Date</strong><div>${escapeHtml(data.dateText)}</div></div>
+        <div class="doc-row"><strong>${labels.documentNo}</strong><div class="doc-number">${escapeHtml(data.documentNumber)}</div></div>
+        <div class="doc-row"><strong>${labels.documentDate}</strong><div>${escapeHtml(data.dateText)}</div></div>
       </div>
     </div>
     <table class="items">
@@ -1987,11 +2203,11 @@
       </colgroup>
       <thead>
         <tr>
-          <th class="w-index">ลำดับที่<br>Item</th>
-          <th>รายการ<br>Description</th>
-          <th class="w-qty">จำนวน<br>Quantity</th>
-          <th class="w-price">ราคา/หน่วย<br>Unit Price</th>
-          <th class="w-amount">จำนวนเงิน<br>Amount</th>
+          <th class="w-index">${labels.no}</th>
+          <th>${labels.description}</th>
+          <th class="w-qty">${labels.quantity}</th>
+          <th class="w-price">${labels.unitPrice}</th>
+          <th class="w-amount">${labels.amount}</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
@@ -2007,20 +2223,20 @@
       <tbody>
         <tr>
           <td class="payment-cell" colspan="2" rowspan="3">${paymentContent}</td>
-          <td class="summary-label" colspan="2">รวมเงิน<br>TOTAL</td>
+          <td class="summary-label" colspan="2">${labels.subtotal}</td>
           <td class="summary-value">${formatMoney(data.subtotal)}</td>
         </tr>
         <tr>
-          <td class="summary-label" colspan="2">ภาษีมูลค่าเพิ่ม<br>( VAT 7% )</td>
+          <td class="summary-label" colspan="2">${labels.vat}</td>
           <td class="summary-value">${formatMoney(data.vatAmount)}</td>
         </tr>
         <tr>
-          <td class="summary-label" colspan="2">ยอดเงินสุทธิ<br>NET AMOUNT</td>
+          <td class="summary-label" colspan="2">${labels.grandTotal}</td>
           <td class="summary-value">${formatMoney(data.grandTotal)}</td>
         </tr>
       </tbody>
     </table>
-    <div class="words"><strong>ตัวอักษร</strong><div class="text">( ${escapeHtml(data.grandTotalText)} )</div></div>
+    <div class="words"><strong>${labels.amountInWords}</strong><div class="text">( ${escapeHtml(data.grandTotalText)} )</div></div>
     ${signatureContent}
   </div>
 </body>

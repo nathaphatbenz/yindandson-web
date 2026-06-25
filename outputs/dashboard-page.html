@@ -37,9 +37,9 @@
     }
 
     .page {
-      width: min(1120px, calc(100% - 32px));
+      width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 28px 0 36px;
+      padding: 28px 0 40px;
     }
 
     .hero {
@@ -818,8 +818,9 @@
       </div>
       <div class="hero-actions">
         <a class="button ghost active" href="dashboard-page.html" aria-current="page"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
-        <a class="button ghost" href="report-page.html"><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
-        <a class="button ghost" href="monthly-work-page.html"><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
+        <a class="button ghost" href="report-page.html" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
+        <a class="button ghost" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
+        <a class="button ghost" href="monthly-summary-page.html" data-hide-yodsapong hidden><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>สรุปรายเดือน</a>
         <a class="button ghost" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
         <a class="button" href="create-invoice-page.html"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้างเอกสาร</a>
       </div>
@@ -908,10 +909,16 @@
     const INVOICE_STORAGE_KEY = "yind_invoice_documents";
     const DASHBOARD_NOTICE_KEY = "yind_dashboard_notice";
     const LOGIN_USERNAME_KEY = "yind_login_username";
+    const currentLoginUsername = sessionStorage.getItem(LOGIN_USERNAME_KEY);
     document.querySelectorAll("[data-ntpbenz-only]").forEach((element) => {
-      const isNtpbenz = sessionStorage.getItem(LOGIN_USERNAME_KEY) === "ntpbenz";
+      const isNtpbenz = currentLoginUsername === "ntpbenz";
       element.hidden = !isNtpbenz;
       element.style.display = isNtpbenz ? "" : "none";
+    });
+    document.querySelectorAll("[data-hide-yodsapong]").forEach((element) => {
+      const shouldHide = currentLoginUsername === "yodsapong";
+      element.hidden = shouldHide;
+      element.style.display = shouldHide ? "none" : "";
     });
     if (window.lucide) {
       window.lucide.createIcons();

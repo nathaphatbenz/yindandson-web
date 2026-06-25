@@ -580,3 +580,69 @@ async function fetchReceiptReport({ year, month }) {
   );
   return recordsWithReferences.map((record) => mapReceiptReportRecord(record));
 }
+
+function mapPendingInvoiceRecord(record, numberField) {
+  return {
+    id: record.id,
+    document_date: record.document_date,
+    invoice_number: record[numberField] || "",
+    customer_name: record.customer_name || "-",
+    document_status: String(record.document_status || "").toLowerCase(),
+    grand_total: Number(record.grand_total || 0)
+  };
+}
+
+async function fetchPendingInvoicesForMonth({ year, month }) {
+  const client = requireSupabaseClient();
+  const range = getReportMonthRange(year, month);
+  const [documentInvResult, documentReceiptResult] = await Promise.all([
+    client.from("documents")
+      .select("id, document_date, document_number, customer_name, document_status, grand_total")
+      .eq("document_group", "INV")
+      .gte("document_date", range.start)
+      .lt("document_date", range.end)
+      .order("document_date", { ascending: true }),
+    client.from("documents")
+      .select("reference_document_id")
+      .eq("document_group", "RE")
+      .not("reference_document_id", "is", null)
+  ]);
+
+  if (!documentInvResult.error && !documentReceiptResult.error) {
+    const referencedInvoiceIds = new Set((documentReceiptResult.data || [])
+      .map((record) => record.reference_document_id)
+      .filter(Boolean));
+    return (documentInvResult.data || [])
+      .filter((record) => !referencedInvoiceIds.has(record.id))
+      .map((record) => mapPendingInvoiceRecord(record, "document_number"));
+  }
+
+  const documentError = documentInvResult.error || documentReceiptResult.error;
+  if (!isMissingTableError(documentError) && !isMissingDocumentMetadataError(documentError)) {
+    throw documentError;
+  }
+
+  const [invoiceResult, receiptResult] = await Promise.all([
+    client.from(INVOICE_TABLE)
+      .select("id, document_date, invoice_number, customer_name, document_status, grand_total")
+      .eq("document_group", "INV")
+      .gte("document_date", range.start)
+      .lt("document_date", range.end)
+      .order("document_date", { ascending: true }),
+    client.from(INVOICE_TABLE)
+      .select("source_invoice_id")
+      .eq("document_group", "RE")
+      .not("source_invoice_id", "is", null)
+  ]);
+
+  if (invoiceResult.error || receiptResult.error) {
+    throw invoiceResult.error || receiptResult.error;
+  }
+
+  const referencedInvoiceIds = new Set((receiptResult.data || [])
+    .map((record) => record.source_invoice_id)
+    .filter(Boolean));
+  return (invoiceResult.data || [])
+    .filter((record) => !referencedInvoiceIds.has(record.id))
+    .map((record) => mapPendingInvoiceRecord(record, "invoice_number"));
+}
