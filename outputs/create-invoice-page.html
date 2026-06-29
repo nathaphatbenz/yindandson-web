@@ -679,7 +679,24 @@
         margin-top: 14px;
       }
 
-      .nav-link { flex: 1; }
+      .nav-link,
+      .page-nav .action-menu {
+        flex: 1 1 148px;
+      }
+
+      .page-nav .action-menu > summary,
+      .top-utility .user-menu > summary {
+        width: 100%;
+      }
+
+      .page-nav .menu-panel,
+      .top-utility .menu-panel {
+        right: 0;
+        left: auto;
+        max-width: calc(100vw - 20px);
+        width: 100%;
+        min-width: 0;
+      }
 
       .section-header .add-item {
         width: 100%;

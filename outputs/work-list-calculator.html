@@ -639,8 +639,23 @@
       }
 
       .actions button,
-      .actions .dashboard-link {
+      .actions .dashboard-link,
+      .actions .action-menu {
         flex: 1 1 150px;
+      }
+
+      .actions .action-menu > summary,
+      .top-utility .user-menu > summary {
+        width: 100%;
+      }
+
+      .actions .menu-panel,
+      .top-utility .menu-panel {
+        right: 0;
+        left: auto;
+        max-width: calc(100vw - 20px);
+        width: 100%;
+        min-width: 0;
       }
 
       .section-head {

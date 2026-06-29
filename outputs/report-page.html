@@ -194,6 +194,11 @@
       .hero, .toolbar { align-items: stretch; flex-direction: column; }
       h1 { font-size: 1.8rem; }
       .hero-actions .button, .toolbar .button { width: 100%; }
+      .hero-actions .action-menu { width: 100%; }
+      .hero-actions .action-menu > summary,
+      .top-utility .user-menu > summary { width: 100%; }
+      .hero-actions .menu-panel,
+      .top-utility .menu-panel { right: 0; left: auto; max-width: calc(100vw - 20px); width: 100%; min-width: 0; }
       .filters { display: grid; grid-template-columns: 1fr 1fr; }
       .filter-field { min-width: 0; }
       .summary-grid { display: grid; grid-template-columns: 1fr; }

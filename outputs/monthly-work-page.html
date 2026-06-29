@@ -166,7 +166,14 @@
       .page { width: min(100% - 20px, 680px); padding-top: 18px; }
       .page-header, .filters { align-items: stretch; flex-direction: column; }
       .page-nav { justify-content: stretch; }
-      .nav-link { flex: 1 1 136px; }
+      .nav-link,
+      .page-nav .action-menu { flex: 1 1 136px; }
+      .page-nav .action-menu > summary,
+      .top-utility .user-menu > summary,
+      .footer-actions .action-menu > summary { width: 100%; }
+      .page-nav .menu-panel,
+      .top-utility .menu-panel,
+      .footer-actions .menu-panel { right: 0; left: auto; max-width: calc(100vw - 20px); width: 100%; min-width: 0; }
       .field { min-width: 0; }
       .section-head { align-items: stretch; flex-direction: column; }
       .section-head .button { width: 100%; }
