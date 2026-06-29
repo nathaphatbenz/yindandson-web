@@ -14,6 +14,8 @@ set
       when upper(invoice_number) like 'RE-%' then 'RE'
       when upper(invoice_number) like 'RE.%' then 'RE'
       when document_type ilike '%ใบเสร็จรับเงิน%' then 'RE'
+      when upper(invoice_number) like 'QT-%' then 'QT'
+      when document_type ilike '%ใบเสนอราคา%' then 'QT'
       else 'INV'
     end
   ),
@@ -41,7 +43,7 @@ begin
   ) then
     alter table public.invoices
     add constraint invoices_document_group_check
-    check (document_group in ('INV', 'RE'));
+    check (document_group in ('INV', 'RE', 'QT'));
   end if;
 end $$;
 

@@ -7,7 +7,7 @@ create table if not exists public.invoices (
   invoice_number text not null,
   document_date date not null,
   document_type text not null,
-  document_group text not null default 'INV' check (document_group in ('INV', 'RE')),
+  document_group text not null default 'INV' check (document_group in ('INV', 'RE', 'QT')),
   document_year integer not null default (extract(year from now())::integer + 543),
   document_status text not null default 'issued' check (document_status in ('issued', 'reserved', 'cancelled')),
   customer_address text not null,

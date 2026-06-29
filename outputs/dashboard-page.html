@@ -56,6 +56,62 @@
       margin-bottom: 12px;
     }
 
+    .user-menu,
+    .action-menu {
+      position: relative;
+    }
+
+    .user-menu summary,
+    .action-menu summary {
+      list-style: none;
+    }
+
+    .user-menu summary::-webkit-details-marker,
+    .action-menu summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .menu-panel {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      z-index: 20;
+      min-width: 220px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.16);
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      min-height: 38px;
+      border: 0;
+      border-radius: 7px;
+      padding: 8px 10px;
+      color: var(--text);
+      background: transparent;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 750;
+      text-align: left;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .menu-item:hover {
+      background: #f3f6fb;
+    }
+
+    .menu-item svg {
+      width: 16px;
+      height: 16px;
+      margin-right: 8px;
+    }
+
     .eyebrow {
       margin: 0 0 3px;
       color: var(--primary);
@@ -274,6 +330,15 @@
       min-width: 1040px;
       table-layout: fixed;
       background: #fff;
+    }
+
+    .quotation-folder-detail table col:nth-child(5),
+    .quotation-folder-detail table col:nth-child(6),
+    .quotation-folder-detail table th:nth-child(5),
+    .quotation-folder-detail table th:nth-child(6),
+    .quotation-folder-detail table td:nth-child(5),
+    .quotation-folder-detail table td:nth-child(6) {
+      display: none;
     }
 
     th,
@@ -543,8 +608,9 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 36px;
+      min-width: 36px;
       height: 30px;
+      padding: 0 9px;
       border-radius: 6px;
       color: #744f00;
       background: #f8d76b;
@@ -804,7 +870,12 @@
 <body>
   <main class="page">
     <div class="top-utility">
-      <button class="button ghost" type="button" id="logoutButton"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
+      <details class="user-menu">
+        <summary class="button ghost"><i data-lucide="user" aria-hidden="true"></i>ผู้ใช้งาน</summary>
+        <div class="menu-panel">
+          <button class="menu-item" type="button" id="logoutButton"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
+        </div>
+      </details>
     </div>
     <header class="hero">
       <div>
@@ -817,12 +888,18 @@
         </div>
       </div>
       <div class="hero-actions">
-        <a class="button ghost active" href="dashboard-page.html" aria-current="page"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
-        <a class="button ghost" href="report-page.html" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
-        <a class="button ghost" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
-        <a class="button ghost" href="monthly-summary-page.html" data-hide-yodsapong hidden><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>สรุปรายเดือน</a>
-        <a class="button ghost" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
         <a class="button" href="create-invoice-page.html"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้างเอกสาร</a>
+        <details class="action-menu">
+          <summary class="button ghost"><i data-lucide="more-horizontal" aria-hidden="true"></i>เพิ่มเติม</summary>
+          <div class="menu-panel">
+            <a class="menu-item" href="create-invoice-page.html?type=quotation"><i data-lucide="file-pen-line" aria-hidden="true"></i>สร้างใบเสนอราคา</a>
+            <a class="menu-item" href="dashboard-page.html" aria-current="page"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
+            <a class="menu-item" href="report-page.html" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
+            <a class="menu-item" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
+            <a class="menu-item" href="monthly-summary-page.html" data-hide-yodsapong hidden><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>สรุปรายเดือน</a>
+            <a class="menu-item" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
+          </div>
+        </details>
       </div>
     </header>
 
@@ -1121,8 +1198,9 @@
     function getFolderRecords(records) {
       const sourceIds = new Set(records.map((record) => record.source_invoice_id).filter(Boolean));
       return records.filter((record) => {
-        const isInv = String(record.invoice_number || "").toUpperCase().startsWith("INV");
-        return isInv || !record.source_invoice_id && !sourceIds.has(record.id);
+        const documentNumber = getDocumentNumberValue(record).toUpperCase();
+        const isInv = documentNumber.startsWith("INV");
+        return isInv || isQuotationDocument(record) || !record.source_invoice_id && !sourceIds.has(record.id);
       });
     }
 
@@ -1161,7 +1239,29 @@
     }
 
     function isBillingInvoice(record) {
-      return String(record?.invoice_number || "").toUpperCase().startsWith("INV");
+      return getDocumentNumberValue(record).toUpperCase().startsWith("INV");
+    }
+
+    function getDocumentNumberValue(record) {
+      return String(record?.invoice_number || record?.document_number || "");
+    }
+
+    function isQuotationDocument(record) {
+      const documentNumber = getDocumentNumberValue(record).toUpperCase();
+      const documentType = String(record?.document_type || "");
+      return documentNumber.startsWith("QT-")
+        || record?.document_group === "QT"
+        || documentType.includes("ใบเสนอราคา");
+    }
+
+    function getFolderMarkLabel(record) {
+      if (isQuotationDocument(record)) {
+        return "ใบเสนอราคา";
+      }
+      if (getDocumentNumberValue(record).toUpperCase().startsWith("RE")) {
+        return "RE";
+      }
+      return "INV";
     }
 
     async function canDeleteInvoiceRecord(record) {
@@ -1214,7 +1314,7 @@
       folderView.innerHTML = records.map((record) => `
         <button class="folder-card" type="button" data-folder-id="${escapeHtml(record.id)}">
           <div class="folder-card-header">
-            <span class="folder-mark" aria-hidden="true">INV</span>
+            <span class="folder-mark" aria-hidden="true">${escapeHtml(getFolderMarkLabel(record))}</span>
             <span class="folder-count">${getRecordsInFolder(invoiceRecords, record.id).length} เอกสาร</span>
           </div>
           <div class="folder-title">${escapeHtml(record.customer_name)}</div>
@@ -1440,6 +1540,7 @@
       const folderRecords = getPaginatedRecords(allFolderRecords);
       const selectedRecord = folderRecords.find((record) => record.id === selectedRecordId);
       const isDetailMode = Boolean(selectedRecord);
+      const isQuotationDetailMode = isDetailMode && isQuotationDocument(selectedRecord);
       const records = isDetailMode ? getRecordsInFolder(filteredRecords, selectedRecord.id) : folderRecords;
       const hasRecords = folderRecords.length > 0;
 
@@ -1449,6 +1550,7 @@
       emptyState.style.display = hasRecords ? "none" : "flex";
       folderView.style.display = hasRecords && !isDetailMode ? "grid" : "none";
       detailView.style.display = hasRecords && isDetailMode ? "block" : "none";
+      detailView.classList.toggle("quotation-folder-detail", Boolean(isQuotationDetailMode));
       detailHeader.style.display = hasRecords && isDetailMode ? "flex" : "none";
       tableView.style.display = hasRecords && isDetailMode ? "" : "none";
       mobileList.style.display = hasRecords && isDetailMode ? "" : "none";

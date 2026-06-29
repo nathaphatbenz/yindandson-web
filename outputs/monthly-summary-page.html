@@ -15,6 +15,13 @@
     body { margin:0; color:var(--ink); background:var(--bg); line-height:1.5; }
     .page { width:min(1180px,calc(100% - 32px)); margin:0 auto; padding:28px 0 40px; }
     .top-utility { display:flex; justify-content:flex-end; margin-bottom:12px; }
+    .user-menu,.action-menu { position:relative; }
+    .user-menu summary,.action-menu summary { list-style:none; }
+    .user-menu summary::-webkit-details-marker,.action-menu summary::-webkit-details-marker { display:none; }
+    .menu-panel { position:absolute; right:0; top:calc(100% + 8px); z-index:20; min-width:220px; padding:8px; border:1px solid var(--line); border-radius:8px; background:#fff; box-shadow:0 16px 34px rgba(15,23,42,.16); }
+    .menu-item { display:flex; align-items:center; width:100%; min-height:38px; border:0; border-radius:7px; padding:8px 10px; color:var(--ink); background:transparent; font:inherit; font-size:.9rem; font-weight:750; text-align:left; text-decoration:none; cursor:pointer; }
+    .menu-item:hover { background:#f3f6fb; }
+    .menu-item svg { width:16px; height:16px; margin-right:8px; }
     .page-header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin-bottom:20px; }
     .eyebrow { margin:0 0 3px; color:var(--primary); font-size:.8rem; font-weight:900; text-transform:uppercase; }
     h1 { margin:0; font-size:2rem; letter-spacing:0; }
@@ -78,7 +85,12 @@
 <body>
   <main class="page">
     <div class="top-utility">
-      <button class="nav-link" id="logoutButton" type="button"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
+      <details class="user-menu">
+        <summary class="nav-link"><i data-lucide="user" aria-hidden="true"></i>ผู้ใช้งาน</summary>
+        <div class="menu-panel">
+          <button class="menu-item" id="logoutButton" type="button"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
+        </div>
+      </details>
     </div>
     <header class="page-header">
       <div>
@@ -87,12 +99,17 @@
         <p class="subtitle">ภาพรวมรายการเบิกและเอกสารที่รอออกใบกำกับภาษี</p>
       </div>
       <nav class="page-nav" aria-label="เมนูหลัก">
-        <a class="nav-link" href="dashboard-page.html"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
-        <a class="nav-link" href="report-page.html" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
-        <a class="nav-link" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
-        <a class="nav-link active" href="monthly-summary-page.html" aria-current="page" data-hide-yodsapong hidden><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>สรุปรายเดือน</a>
-        <a class="nav-link" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
         <a class="nav-link" href="create-invoice-page.html"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้างเอกสาร</a>
+        <details class="action-menu">
+          <summary class="nav-link"><i data-lucide="more-horizontal" aria-hidden="true"></i>เพิ่มเติม</summary>
+          <div class="menu-panel">
+            <a class="menu-item" href="dashboard-page.html"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
+            <a class="menu-item" href="report-page.html" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
+            <a class="menu-item" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
+            <a class="menu-item" href="monthly-summary-page.html" aria-current="page" data-hide-yodsapong hidden><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>สรุปรายเดือน</a>
+            <a class="menu-item" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
+          </div>
+        </details>
       </nav>
     </header>
 

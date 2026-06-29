@@ -110,9 +110,14 @@ function isMissingDocumentMetadataError(error) {
 function inferDocumentGroupFromRecord(record) {
   const numberValue = String(record.invoice_number || "").toUpperCase();
   const typeValue = String(record.document_type || "");
-  return numberValue.startsWith("RE-") || numberValue.startsWith("RE.") || typeValue.includes("ใบเสร็จรับเงิน")
-    ? "RE"
-    : "INV";
+  if (numberValue.startsWith("QT-") || typeValue.includes("ใบเสนอราคา")) {
+    return "QT";
+  }
+  if (numberValue.startsWith("RE-") || numberValue.startsWith("RE.") || typeValue.includes("ใบเสร็จรับเงิน")) {
+    return "RE";
+  }
+
+  return "INV";
 }
 
 function inferDocumentYearFromRecord(record) {
@@ -135,7 +140,7 @@ async function fetchInvoices({ keyword = "", page = 1, pageSize = 20 } = {}) {
   const to = from + pageSize - 1;
   let query = client
     .from(INVOICE_TABLE)
-    .select("id, customer_name, invoice_number, document_date, document_type, document_status, source_invoice_id, created_at", { count: "exact" })
+    .select("id, customer_name, invoice_number, document_date, document_type, document_group, document_status, source_invoice_id, created_at", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, to);
 

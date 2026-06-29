@@ -58,6 +58,71 @@
       margin-bottom: 12px;
     }
 
+    .user-menu,
+    .action-menu {
+      position: relative;
+    }
+
+    .user-menu summary,
+    .action-menu summary {
+      list-style: none;
+    }
+
+    .user-menu summary::-webkit-details-marker,
+    .action-menu summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .menu-panel {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      z-index: 20;
+      min-width: 220px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.16);
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      min-height: 38px;
+      border: 0;
+      border-radius: 7px;
+      padding: 8px 10px;
+      color: var(--text);
+      background: transparent;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 750;
+      text-align: left;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .menu-item:hover {
+      background: #f3f6fb;
+    }
+
+    .user-menu > summary.secondary,
+    .action-menu > summary.secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 18px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      background: #fff;
+    }
+
     .topbar {
       display: flex;
       align-items: center;
@@ -743,7 +808,12 @@
 <body>
   <main class="app">
     <div class="top-utility">
-      <button class="secondary" type="button" id="logoutButton">ออกจากระบบ</button>
+      <details class="user-menu">
+        <summary class="secondary">ผู้ใช้งาน</summary>
+        <div class="menu-panel">
+          <button class="menu-item" type="button" id="logoutButton">ออกจากระบบ</button>
+        </div>
+      </details>
     </div>
     <header class="topbar">
       <div class="brand">
@@ -759,13 +829,6 @@
         </div>
       </div>
       <div class="actions">
-        <a class="dashboard-link" href="dashboard-page.html" title="กลับไปยังแดชบอร์ด">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M9 12h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          แดชบอร์ด
-        </a>
         <button class="primary" type="button" id="pdfBtn" title="บันทึกเป็นไฟล์ PDF">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
@@ -773,6 +836,12 @@
           </svg>
           บันทึก PDF
         </button>
+        <details class="action-menu">
+          <summary class="secondary">เพิ่มเติม</summary>
+          <div class="menu-panel">
+            <a class="menu-item" href="dashboard-page.html">แดชบอร์ด</a>
+          </div>
+        </details>
       </div>
     </header>
 

@@ -43,6 +43,52 @@
     }
 
     .top-utility { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+    .user-menu, .action-menu { position: relative; }
+    .user-menu summary, .action-menu summary { list-style: none; }
+    .user-menu summary::-webkit-details-marker, .action-menu summary::-webkit-details-marker { display: none; }
+    .menu-panel {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      z-index: 20;
+      min-width: 220px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.16);
+    }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      min-height: 38px;
+      border: 0;
+      border-radius: 7px;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: transparent;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 750;
+      text-align: left;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .menu-item:hover { background: #f3f6fb; }
+    .menu-item svg { width: 16px; height: 16px; margin-right: 8px; }
+    .action-menu > summary.secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 18px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
 
     .page-header {
       display: flex;
@@ -258,6 +304,34 @@
       color: #344054;
       background: #eef3f8;
       font-weight: 800;
+    }
+
+    .document-tabs {
+      display: inline-flex;
+      gap: 4px;
+      width: fit-content;
+      max-width: 100%;
+      margin: 10px 0 8px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    .document-tab {
+      min-height: 36px;
+      border-radius: 7px;
+      padding: 8px 12px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 850;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .document-tab.active {
+      color: #fff;
+      background: var(--primary);
     }
 
     .advance-receipt-options {
@@ -656,6 +730,12 @@
         flex-direction: column-reverse;
       }
 
+      .document-tabs {
+        display: grid;
+        width: 100%;
+        grid-template-columns: 1fr;
+      }
+
       button {
         width: 100%;
       }
@@ -665,7 +745,12 @@
 <body>
   <main>
     <div class="top-utility">
-      <button class="nav-link" type="button" id="logoutButton"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
+      <details class="user-menu">
+        <summary class="nav-link"><i data-lucide="user" aria-hidden="true"></i>ผู้ใช้งาน</summary>
+        <div class="menu-panel">
+          <button class="menu-item" type="button" id="logoutButton"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
+        </div>
+      </details>
     </div>
     <header class="page-header">
       <div>
@@ -691,6 +776,10 @@
           <div class="grid">
             <div class="field full">
               <label>ประเภทเอกสาร</label>
+              <div class="document-tabs" aria-label="เลือกประเภทเอกสาร">
+                <a class="document-tab" id="billingDocumentTab" href="create-invoice-page.html">ใบวางบิล</a>
+                <a class="document-tab" id="quotationDocumentTab" href="create-invoice-page.html?type=quotation">ใบเสนอราคา</a>
+              </div>
               <input id="documentType" name="ประเภทเอกสาร" type="hidden" value="ใบวางบิล / ใบแจ้งหนี้">
               <div class="readonly-display" id="documentTypeDisplay">ใบวางบิล / ใบแจ้งหนี้</div>
               <div class="error" aria-live="polite"></div>
@@ -788,8 +877,13 @@
           </label>
         </div>
         <div class="actions">
-          <button class="secondary" id="resetFormButton" type="button">ล้างข้อมูล</button>
           <button class="primary" type="submit">บันทึกเอกสาร</button>
+          <details class="action-menu">
+            <summary class="secondary">เพิ่มเติม</summary>
+            <div class="menu-panel">
+              <button class="menu-item" id="resetFormButton" type="button"><i data-lucide="eraser" aria-hidden="true"></i>ล้างข้อมูล</button>
+            </div>
+          </details>
         </div>
         <p class="status" id="formStatus" aria-live="polite"></p>
       </form>
@@ -843,6 +937,9 @@
     const customerAddressInput = document.querySelector("#customerAddress");
     const taxIdInput = document.querySelector("#taxId");
     const englishPdfCheckbox = document.querySelector("#englishPdfCheckbox");
+    const documentTabs = document.querySelector(".document-tabs");
+    const billingDocumentTab = document.querySelector("#billingDocumentTab");
+    const quotationDocumentTab = document.querySelector("#quotationDocumentTab");
     let formHasChanges = false;
     const customerCompanyOptions = document.querySelector("#customerCompanyOptions");
     const advanceReceiptField = document.querySelector("#advanceReceiptField");
@@ -865,12 +962,14 @@
     const INVOICE_STORAGE_KEY = "yind_invoice_documents";
     const DEFAULT_DOCUMENT_TYPE = "ใบวางบิล / ใบแจ้งหนี้";
     const RECEIPT_DOCUMENT_TYPE = "ใบกำกับภาษี / ใบเสร็จรับเงิน";
+    const QUOTATION_DOCUMENT_TYPE = "ใบเสนอราคา";
     const PDF_LABELS = {
       th: {
         htmlLang: "th",
         original: "ต้นฉบับ",
         billingTitle: "ใบวางบิล / ใบแจ้งหนี้",
         receiptTitle: "ใบกำกับภาษี / ใบเสร็จรับเงิน",
+        quotationTitle: "ใบเสนอราคา",
         customerName: "ชื่อลูกค้า / Customers:",
         customerAddress: "ที่อยู่ / Address:",
         taxId: "เลขประจำตัวผู้เสียภาษี",
@@ -909,6 +1008,7 @@
         original: "Original",
         billingTitle: "Billing Note / Invoice",
         receiptTitle: "Receipt / Tax Invoice",
+        quotationTitle: "Quotation",
         customerName: "Customer Name:",
         customerAddress: "Customer Address:",
         taxId: "Tax ID:",
@@ -947,6 +1047,7 @@
     const editingInvoiceId = pageParams.get("id");
     const receiptSourceId = pageParams.get("receiptFrom");
     const printInvoiceId = pageParams.get("printId");
+    const requestedDocumentType = pageParams.get("type");
     let currentSourceInvoiceId = "";
     let currentSourceInvoiceNumber = "";
     let currentDocumentNumber = "";
@@ -1020,9 +1121,17 @@
     }
 
     function setDocumentType(value) {
-      const nextValue = value || DEFAULT_DOCUMENT_TYPE;
+      const nextValue = requestedDocumentType === "quotation" && !editingInvoiceId && !receiptSourceId
+        ? QUOTATION_DOCUMENT_TYPE
+        : value || DEFAULT_DOCUMENT_TYPE;
       documentType.value = nextValue;
       documentTypeDisplay.textContent = nextValue;
+      documentTabs.hidden = Boolean(editingInvoiceId || receiptSourceId || isReceiptDocument(nextValue));
+      const isQuotation = isQuotationDocument(nextValue);
+      billingDocumentTab.classList.toggle("active", !isQuotation);
+      quotationDocumentTab.classList.toggle("active", isQuotation);
+      billingDocumentTab.setAttribute("aria-current", !isQuotation ? "page" : "false");
+      quotationDocumentTab.setAttribute("aria-current", isQuotation ? "page" : "false");
       updateAdvanceReceiptControls();
     }
 
@@ -1510,6 +1619,9 @@
 
     function getPdfDocumentTitle(typeValue, language) {
       const labels = PDF_LABELS[language] || PDF_LABELS.th;
+      if (isQuotationDocument(typeValue)) {
+        return labels.quotationTitle;
+      }
       return isReceiptDocument(typeValue) ? labels.receiptTitle : labels.billingTitle;
     }
 
@@ -1522,7 +1634,20 @@
       return typeValue === RECEIPT_DOCUMENT_TYPE || String(typeValue || "").includes("ใบเสร็จรับเงิน");
     }
 
+    function isQuotationDocument(typeValue) {
+      if (typeValue && typeof typeValue === "object") {
+        const documentNumber = String(typeValue.document_number || typeValue.invoice_number || "").toUpperCase();
+        return documentNumber.startsWith("QT-")
+          || typeValue.document_group === "QT"
+          || typeValue.document_type === QUOTATION_DOCUMENT_TYPE;
+      }
+      return typeValue === QUOTATION_DOCUMENT_TYPE || String(typeValue || "").includes("ใบเสนอราคา");
+    }
+
     function getDocumentGroup(typeValue) {
+      if (isQuotationDocument(typeValue)) {
+        return "QT";
+      }
       return isReceiptDocument(typeValue) ? "RE" : "INV";
     }
 
@@ -1541,11 +1666,13 @@
     function parseDocumentSequence(documentNumber) {
       const value = String(documentNumber || "").trim();
       const receiptMatch = value.match(/^RE-\d{4}-(\d{3})$/i);
+      const quotationMatch = value.match(/^QT-\d{4}-(\d{3,4})$/i);
       const billingMatch = value.match(/^INV01-(\d{3})$/i);
       const datedInvoiceMatch = value.match(/^INV-\d{4}-(\d{3,4})$/i);
 
       return Number(
         receiptMatch?.[1]
+        || quotationMatch?.[1]
         || billingMatch?.[1]
         || datedInvoiceMatch?.[1]
         || 0
@@ -1788,6 +1915,7 @@
         language,
         documentType: typeValue,
         documentTitle: getPdfDocumentTitle(typeValue, language),
+        documentGroup: record.document_group || getDocumentGroup(typeValue),
         documentNumber: record.invoice_number || "",
         customerCompany: record.customer_name || "",
         customerAddress: record.customer_address || "",
@@ -1838,15 +1966,24 @@
         </tr>
       `;
 
-      const isBillingDocument = data.documentType === "ใบวางบิล / ใบแจ้งหนี้";
-      const paymentContent = isBillingDocument
+      const isQuotationPdf = isQuotationDocument({
+        document_type: data.documentType,
+        document_group: data.documentGroup,
+        document_number: data.documentNumber
+      });
+      const isBillingLikeDocument = data.documentType === DEFAULT_DOCUMENT_TYPE || isQuotationPdf;
+      const paymentContent = isBillingLikeDocument
         ? `<ol class="billing-notes">
             ${labels.billingNotes.map((note) => `<li>${note}</li>`).join("")}
           </ol>`
         : `<div class="check-row"><span class="checkbox"></span> ${labels.cash}</div>
           <div class="check-row"><span class="checkbox"></span> ${labels.transfer}</div>
           <div class="check-row"><span class="checkbox"></span> ${labels.cheque}</div>`;
-      const signatureContent = isBillingDocument
+      const signatureContent = isQuotationPdf
+        ? `<div class="signature signature-quotation">
+            <div>${labels.companySignature}</div>
+          </div>`
+        : isBillingLikeDocument
         ? `<div class="signature signature-billing">
             <div>${labels.receiverProduct}</div>
             <div>${labels.senderProduct}</div>
@@ -2143,6 +2280,17 @@
       min-height: 19mm;
     }
     .signature-billing div {
+      font-size: 10.3px;
+      padding-top: 5px;
+    }
+    .signature-quotation {
+      grid-template-columns: 1fr;
+      width: 52%;
+      min-height: 19mm;
+      margin-left: 0;
+      margin-right: auto;
+    }
+    .signature-quotation div {
       font-size: 10.3px;
       padding-top: 5px;
     }

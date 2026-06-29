@@ -39,6 +39,13 @@
     }
 
     .top-utility { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+    .user-menu, .action-menu { position: relative; }
+    .user-menu summary, .action-menu summary { list-style: none; }
+    .user-menu summary::-webkit-details-marker, .action-menu summary::-webkit-details-marker { display: none; }
+    .menu-panel { position: absolute; right: 0; top: calc(100% + 8px); z-index: 20; min-width: 220px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: #fff; box-shadow: 0 16px 34px rgba(15,23,42,.16); }
+    .menu-item { display: flex; align-items: center; width: 100%; min-height: 38px; border: 0; border-radius: 7px; padding: 8px 10px; color: var(--text); background: transparent; font: inherit; font-size: .9rem; font-weight: 750; text-align: left; text-decoration: none; cursor: pointer; }
+    .menu-item:hover { background: #f3f6fb; }
+    .menu-item svg { width: 16px; height: 16px; margin-right: 8px; }
 
     .hero, .toolbar, .table-heading, .summary-grid, .actions {
       display: flex;
@@ -200,7 +207,12 @@
 <body>
   <main class="page">
     <div class="top-utility">
-      <button class="button ghost" id="logoutButton" type="button"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
+      <details class="user-menu">
+        <summary class="button ghost"><i data-lucide="user" aria-hidden="true"></i>ผู้ใช้งาน</summary>
+        <div class="menu-panel">
+          <button class="menu-item" id="logoutButton" type="button"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
+        </div>
+      </details>
     </div>
     <header class="hero">
       <div>
@@ -209,12 +221,18 @@
         <p class="subtitle">รายงานใบเสร็จรับเงิน / ใบกำกับภาษี</p>
       </div>
       <nav class="hero-actions" aria-label="เมนูหลัก">
-        <a class="button ghost" href="dashboard-page.html"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
-        <a class="button ghost active" href="report-page.html" aria-current="page" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
-        <a class="button ghost" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
-        <a class="button ghost" href="monthly-summary-page.html" data-hide-yodsapong hidden><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>สรุปรายเดือน</a>
-        <a class="button ghost" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
-        <a class="button ghost" href="create-invoice-page.html"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้างเอกสาร</a>
+        <button class="button" id="savePdfButton" type="button"><i data-lucide="file-down" aria-hidden="true"></i>บันทึก PDF</button>
+        <details class="action-menu">
+          <summary class="button ghost"><i data-lucide="more-horizontal" aria-hidden="true"></i>เพิ่มเติม</summary>
+          <div class="menu-panel">
+            <a class="menu-item" href="dashboard-page.html"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
+            <a class="menu-item" href="report-page.html" aria-current="page" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
+            <a class="menu-item" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
+            <a class="menu-item" href="monthly-summary-page.html" data-hide-yodsapong hidden><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>สรุปรายเดือน</a>
+            <a class="menu-item" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
+            <a class="menu-item" href="create-invoice-page.html"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้างเอกสาร</a>
+          </div>
+        </details>
       </nav>
     </header>
 
@@ -230,7 +248,6 @@
             <select id="yearFilter"></select>
           </div>
         </div>
-        <button class="button ghost" id="savePdfButton" type="button">บันทึก PDF</button>
       </div>
       <p class="status" id="statusMessage" aria-live="polite"></p>
     </section>
