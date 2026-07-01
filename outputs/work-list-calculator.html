@@ -163,6 +163,18 @@
       font-size: 15px;
     }
 
+    .page-helper {
+      margin: 8px 0 0;
+      color: #475467;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .required {
+      color: var(--danger);
+      font-weight: 900;
+    }
+
     .actions {
       display: flex;
       gap: 10px;
@@ -315,6 +327,13 @@
     input:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.13);
+    }
+
+    input.is-invalid,
+    select.is-invalid,
+    textarea.is-invalid {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.12);
     }
 
     textarea {
@@ -514,6 +533,61 @@
       display: block;
     }
 
+    .validation-summary {
+      margin: 0 0 18px;
+      padding: 14px 16px;
+      border: 1px solid #fda29b;
+      border-radius: 8px;
+      color: #7a271a;
+      background: #fff4f2;
+      box-shadow: 0 10px 24px rgba(180, 35, 24, 0.08);
+    }
+
+    .validation-summary strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .validation-summary ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .validation-summary[hidden] {
+      display: none;
+    }
+
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 80;
+      max-width: min(360px, calc(100vw - 32px));
+      padding: 14px 16px;
+      border: 1px solid #a7f3d0;
+      border-radius: 8px;
+      color: #064e3b;
+      background: #ecfdf3;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+      font-weight: 800;
+      line-height: 1.45;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.error {
+      border-color: #fda29b;
+      color: #7a271a;
+      background: #fff4f2;
+    }
+
     .database-panel {
       padding-bottom: 18px;
     }
@@ -610,6 +684,7 @@
       margin-top: 12px;
       display: flex;
       gap: 8px;
+      flex-wrap: wrap;
       justify-content: flex-end;
     }
 
@@ -622,7 +697,7 @@
       background: #8f1f17;
     }
 
-    @media (max-width: 880px) {
+    @media screen and (max-width: 880px) {
       .topbar,
       .layout {
         grid-template-columns: 1fr;
@@ -663,6 +738,82 @@
         flex-direction: column;
       }
 
+      .section-head button {
+        width: 100%;
+      }
+
+      .table-scroll {
+        overflow: visible;
+      }
+
+      table {
+        min-width: 0;
+      }
+
+      table thead {
+        display: none;
+      }
+
+      table,
+      table tbody,
+      table tr,
+      table td {
+        display: block;
+        width: 100%;
+      }
+
+      table tbody {
+        padding: 12px;
+      }
+
+      table tr {
+        margin-bottom: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        overflow: hidden;
+      }
+
+      table td {
+        padding: 12px;
+        border-bottom: 1px solid #eef2f7;
+      }
+
+      table td:last-child {
+        border-bottom: 0;
+      }
+
+      table td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 6px;
+        color: #475467;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      table td.delete-col::before {
+        content: "";
+        display: none;
+      }
+
+      .money,
+      .row-total {
+        text-align: left;
+      }
+
+      input[type="number"] {
+        text-align: left;
+      }
+
+      .trip-control {
+        grid-template-columns: 1fr;
+      }
+
+      .icon-button {
+        width: 100%;
+      }
+
       .database-controls {
         grid-template-columns: 1fr;
       }
@@ -673,6 +824,11 @@
 
       .summary {
         position: static;
+      }
+
+      .toast {
+        right: 16px;
+        bottom: 16px;
       }
     }
 
@@ -841,15 +997,16 @@
         <div>
           <h1>รายการทำงาน</h1>
           <p class="subtitle">กรอกงาน ราคา/หน่วย และจำนวนเที่ยว ระบบจะคำนวณยอดให้ทันที</p>
+          <p class="page-helper">หน้านี้ใช้บันทึกรายการทำงานลงระบบ ช่องที่มี <span class="required">*</span> จำเป็นต้องกรอก</p>
         </div>
       </div>
       <div class="actions">
-        <button class="primary" type="button" id="pdfBtn" title="บันทึกเป็นไฟล์ PDF">
+        <button class="primary" type="button" id="pdfBtn" title="บันทึกข้อมูลลงระบบ">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
             <path d="M14 3v6h6M9 15h6M12 12v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          บันทึก PDF
+          บันทึก
         </button>
         <details class="action-menu">
           <summary class="secondary">เพิ่มเติม</summary>
@@ -860,12 +1017,15 @@
       </div>
     </header>
 
+    <div class="validation-summary" id="validationSummary" role="alert" tabindex="-1" hidden></div>
+    <div class="toast" id="toastMessage" role="status" aria-live="polite"></div>
+
     <section class="layout">
       <div class="main-column">
         <div class="table-wrap">
           <div class="section-head">
             <div>
-              <h2>รายการทำงาน</h2>
+              <h2>รายการทำงาน <span class="required">*</span></h2>
               <p>เพิ่มรายการงาน ราคา/หน่วย และจำนวนเที่ยว</p>
             </div>
             <button class="primary" type="button" id="addRowBtn">
@@ -925,7 +1085,7 @@
             <div>
               <h2>ค้นหารายการเก่า</h2>
               <p>ค้นหารายการเดิมจากทะเบียนหรือคำอธิบาย</p>
-              <p class="database-note">ส่วนนี้ใช้ค้นหาประวัติที่บันทึกไว้ในระบบเดิม ส่วนรายการที่สร้างในหน้านี้จะถูกบันทึกเป็น PDF เท่านั้น</p>
+              <p class="database-note">ส่วนนี้ใช้ค้นหาประวัติรายการทำงานที่เคยบันทึกไว้ในระบบ</p>
             </div>
           </div>
           <div class="database-controls">
@@ -960,7 +1120,7 @@
           <strong id="itemCount">0</strong>
         </div>
         <div class="summary-note">
-          <label for="summaryNote">ทะเบียน</label>
+          <label for="summaryNote">ทะเบียน <span class="required">*</span></label>
           <div class="registration-row">
             <textarea id="summaryNote" placeholder="กรอกทะเบียน"></textarea>
             <div class="registration-actions">
@@ -1010,10 +1170,11 @@
     const searchSupabaseBtn = document.getElementById("searchSupabaseBtn");
     const databaseStatus = document.getElementById("databaseStatus");
     const searchResults = document.getElementById("searchResults");
+    const validationSummary = document.getElementById("validationSummary");
+    const toastMessage = document.getElementById("toastMessage");
 
     const SUPABASE_URL = "https://abxmjdosihhvffoflgon.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable__xQ3zF61gKR3liv-ejBH5Q_bAVUcesH";
-    const SUPABASE_PDF_BUCKET = "work-summary-pdfs";
     let supabaseClient = null;
     let currentEditingId = null;
     let lastSearchRows = [];
@@ -1027,6 +1188,107 @@
     function toNumber(value) {
       const number = Number(value);
       return Number.isFinite(number) ? number : 0;
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function clearValidation() {
+      validationSummary.hidden = true;
+      validationSummary.innerHTML = "";
+      document.querySelectorAll(".is-invalid").forEach((field) => {
+        field.classList.remove("is-invalid");
+      });
+    }
+
+    function showValidationErrors(errors) {
+      validationSummary.innerHTML = `
+        <strong>กรุณาตรวจสอบข้อมูลก่อนบันทึก</strong>
+        <ul>${errors.map((error) => `<li>${escapeHtml(error.message)}</li>`).join("")}</ul>
+      `;
+      validationSummary.hidden = false;
+      validationSummary.focus({ preventScroll: true });
+      validationSummary.scrollIntoView({ behavior: "smooth", block: "start" });
+      const firstField = errors.find((error) => error.field)?.field;
+      if (firstField) {
+        firstField.classList.add("is-invalid");
+        setTimeout(() => firstField.focus(), 120);
+      }
+    }
+
+    let toastTimer = null;
+
+    function showToast(message, type = "success") {
+      window.clearTimeout(toastTimer);
+      toastMessage.textContent = message;
+      toastMessage.classList.toggle("error", type === "error");
+      toastMessage.classList.add("show");
+      toastTimer = window.setTimeout(() => {
+        toastMessage.classList.remove("show");
+      }, 3200);
+    }
+
+    function reloadAfterSuccess() {
+      window.setTimeout(() => {
+        window.location.reload();
+      }, 900);
+    }
+
+    function validateBeforeSave() {
+      clearValidation();
+      const errors = [];
+      const workRows = [...itemsBody.querySelectorAll("tr")];
+
+      if (!summaryNote.value.trim()) {
+        errors.push({ message: "กรุณากรอกทะเบียน", field: summaryNote });
+      }
+
+      if (workRows.length === 0) {
+        errors.push({ message: "กรุณาเพิ่มรายการทำงานอย่างน้อย 1 รายการ", field: addRowBtn });
+      }
+
+      workRows.forEach((row, index) => {
+        const rowNumber = index + 1;
+        const nameField = row.querySelector(".work-name");
+        const priceField = row.querySelector(".unit-price");
+        const tripField = row.querySelector(".trip-amount");
+
+        if (!nameField.value.trim()) {
+          errors.push({ message: `รายการทำงานลำดับที่ ${rowNumber}: กรุณากรอกรายการทำงาน`, field: nameField });
+        }
+
+        if (toNumber(priceField.value) <= 0) {
+          errors.push({ message: `รายการทำงานลำดับที่ ${rowNumber}: หน่วยละต้องมากกว่า 0`, field: priceField });
+        }
+
+        if (toNumber(tripField.value) <= 0) {
+          errors.push({ message: `รายการทำงานลำดับที่ ${rowNumber}: จำนวนเที่ยว/วันต้องมากกว่า 0`, field: tripField });
+        }
+      });
+
+      [...expensesBody.querySelectorAll("tr")].forEach((row, index) => {
+        const rowNumber = index + 1;
+        const nameField = row.querySelector(".expense-name");
+        const amountField = row.querySelector(".expense-amount");
+
+        if (!nameField.value.trim()) {
+          errors.push({ message: `ค่าใช้จ่ายลำดับที่ ${rowNumber}: กรุณากรอกรายการค่าใช้จ่าย`, field: nameField });
+        }
+
+        if (toNumber(amountField.value) <= 0) {
+          errors.push({ message: `ค่าใช้จ่ายลำดับที่ ${rowNumber}: จำนวนเงินที่หักต้องมากกว่า 0`, field: amountField });
+        }
+      });
+
+      errors.forEach((error) => error.field?.classList?.add("is-invalid"));
+      if (errors.length) showValidationErrors(errors);
+      return errors.length === 0;
     }
 
     async function getSupabaseClient() {
@@ -1084,169 +1346,6 @@
       };
     }
 
-    function safeFilePart(value) {
-      const cleaned = (value || "no-registration")
-        .trim()
-        .replace(/[^\p{L}\p{N}-]+/gu, "_")
-        .replace(/^_+|_+$/g, "");
-      return cleaned || "no-registration";
-    }
-
-    async function createSummaryPdfBlob(payload) {
-      const { default: html2canvas } = await import("https://esm.sh/html2canvas@1.4.1");
-      const { jsPDF } = await import("https://esm.sh/jspdf@2.5.1");
-      const report = document.createElement("div");
-      report.style.cssText = `
-        position: fixed;
-        left: -10000px;
-        top: 0;
-        width: 794px;
-        min-height: 1123px;
-        padding: 48px;
-        box-sizing: border-box;
-        background: #ffffff;
-        color: #1f2937;
-        font-family: "Noto Sans Thai", "Tahoma", sans-serif;
-        font-size: 18px;
-        line-height: 1.45;
-      `;
-
-      const workRows = payload.work_items.length
-        ? payload.work_items.map((item) => `
-            <div class="pdf-row">
-              <span>${item.name || "ไม่ระบุรายการ"} (${formatter.format(item.unit_price || 0)} x ${Number(item.quantity || 0).toLocaleString("th-TH")} ${item.unit || ""})</span>
-              <strong>${formatter.format(item.total || 0)}</strong>
-            </div>
-          `).join("")
-        : `<div class="pdf-row"><span>ไม่มีรายการ</span><strong>${formatter.format(0)}</strong></div>`;
-
-      const expenseRows = payload.expense_items.length
-        ? payload.expense_items.map((item) => `
-            <div class="pdf-row">
-              <span>${item.name || "ไม่ระบุรายการ"}</span>
-              <strong>${formatter.format(item.amount || 0)}</strong>
-            </div>
-          `).join("")
-        : `<div class="pdf-row"><span>ไม่มีรายการ</span><strong>${formatter.format(0)}</strong></div>`;
-
-      report.innerHTML = `
-        <style>
-          @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&display=swap");
-          .pdf-registration {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            border: 3px solid #111827;
-            border-radius: 8px;
-            padding: 18px 20px;
-            font-size: 36px;
-            font-weight: 800;
-            color: #111827;
-          }
-          .pdf-title {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            margin-top: 28px;
-            padding: 14px 0 8px;
-            border-bottom: 2px solid #d0d5dd;
-            font-size: 22px;
-            font-weight: 800;
-          }
-          .pdf-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            padding: 8px 0;
-            border-bottom: 1px solid #eaecf0;
-          }
-          .pdf-row span {
-            overflow-wrap: anywhere;
-          }
-          .pdf-row strong {
-            flex: 0 0 auto;
-          }
-          .pdf-net {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            margin-top: 28px;
-            padding: 18px 20px;
-            border-radius: 8px;
-            background: #111827;
-            color: #ffffff;
-            font-size: 24px;
-            font-weight: 800;
-          }
-        </style>
-        <div class="pdf-registration">
-          <span>🚚</span>
-          <span>ทะเบียน ${payload.registration || "-"}</span>
-        </div>
-        <div class="pdf-title">
-          <span>รายการทำงาน เป็นจำนวนเงิน</span>
-          <span>${formatter.format(payload.work_total)}</span>
-        </div>
-        ${workRows}
-        <div class="pdf-title">
-          <span>รายการค่าใช้จ่าย เป็นจำนวนเงิน</span>
-          <span>${formatter.format(payload.expense_total)}</span>
-        </div>
-        ${expenseRows}
-        <div class="pdf-net">
-          <span>ยอดสุทธิหลังหักค่าใช้จ่ายเหลือ</span>
-          <span>${formatter.format(payload.net_total)}</span>
-        </div>
-      `;
-
-      document.body.appendChild(report);
-      if (document.fonts?.ready) await document.fonts.ready;
-      const canvas = await html2canvas(report, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-        useCORS: true
-      });
-      report.remove();
-
-      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const imgData = canvas.toDataURL("image/png");
-
-      let remainingHeight = imgHeight;
-      let y = 0;
-      pdf.addImage(imgData, "PNG", 0, y, imgWidth, imgHeight);
-      remainingHeight -= pageHeight;
-
-      while (remainingHeight > 0) {
-        y -= pageHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, y, imgWidth, imgHeight);
-        remainingHeight -= pageHeight;
-      }
-
-      return pdf.output("blob");
-    }
-
-    async function uploadSummaryPdf(client, payload, recordId) {
-      const pdfBlob = await createSummaryPdfBlob(payload);
-      const datePart = new Date().toISOString().slice(0, 10);
-      const timePart = Date.now();
-      const fileName = `${datePart}/${safeFilePart(payload.registration)}-${recordId}-${timePart}.pdf`;
-      const { error } = await client.storage
-        .from(SUPABASE_PDF_BUCKET)
-        .upload(fileName, pdfBlob, {
-          contentType: "application/pdf",
-          upsert: true
-        });
-
-      if (error) throw error;
-      return fileName;
-    }
-
     function renderSearchResults(rows) {
       lastSearchRows = rows;
 
@@ -1273,7 +1372,7 @@
           </div>
           <div class="result-actions">
             <button class="secondary load-record" type="button" data-id="${row.id}">นำมาแก้ไข</button>
-            <button class="secondary download-pdf" type="button" data-id="${row.id}" ${row.pdf_path ? "" : "disabled"}>ดาวน์โหลด PDF</button>
+            <button class="secondary save-record-pdf" type="button" data-id="${row.id}">บันทึกไฟล์ PDF</button>
             <button class="danger-button delete-record" type="button" data-id="${row.id}">ลบข้อมูล</button>
           </div>
         </div>
@@ -1338,6 +1437,188 @@
       return searchable.includes(query.toLowerCase());
     }
 
+    function safeDownloadName(value) {
+      const cleaned = String(value || "work-list")
+        .trim()
+        .replace(/[\\/:*?"<>|]+/g, "_")
+        .replace(/\s+/g, "_")
+        .replace(/^_+|_+$/g, "");
+      return cleaned || "work-list";
+    }
+
+    async function createRecordPdfBlob(record) {
+      const { default: html2canvas } = await import("https://esm.sh/html2canvas@1.4.1");
+      const { jsPDF } = await import("https://esm.sh/jspdf@2.5.1");
+      const workItems = record.work_items || [];
+      const expenseItems = record.expense_items || [];
+
+      const workRows = workItems.length
+        ? workItems.map((item) => {
+            const name = escapeHtml(item.name || "ไม่ระบุรายการ");
+            const unitPrice = Number(item.unit_price || 0);
+            const quantity = Number(item.quantity || 0);
+            const unit = escapeHtml(item.unit || "");
+            const total = Number(item.total || unitPrice * quantity || 0);
+            return `
+              <div class="pdf-row">
+                <span>${name} (${formatter.format(unitPrice)} x ${quantity.toLocaleString("th-TH")} ${unit})</span>
+                <strong>${formatter.format(total)}</strong>
+              </div>
+            `;
+          }).join("")
+        : `<div class="pdf-row"><span>ไม่มีรายการ</span><strong>${formatter.format(0)}</strong></div>`;
+
+      const expenseRows = expenseItems.length
+        ? expenseItems.map((item) => `
+            <div class="pdf-row">
+              <span>${escapeHtml(item.name || "ไม่ระบุรายการ")}</span>
+              <strong>${formatter.format(Number(item.amount || 0))}</strong>
+            </div>
+          `).join("")
+        : `<div class="pdf-row"><span>ไม่มีรายการ</span><strong>${formatter.format(0)}</strong></div>`;
+
+      const report = document.createElement("div");
+      report.style.cssText = `
+        position: fixed;
+        left: -10000px;
+        top: 0;
+        width: 794px;
+        min-height: 1123px;
+        padding: 48px;
+        box-sizing: border-box;
+        background: #ffffff;
+        color: #1f2937;
+        font-family: "Noto Sans Thai", "Tahoma", sans-serif;
+        font-size: 18px;
+        line-height: 1.45;
+      `;
+      report.innerHTML = `
+        <style>
+          @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&display=swap");
+          .pdf-registration {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            border: 3px solid #111827;
+            border-radius: 8px;
+            padding: 18px 20px;
+            font-size: 36px;
+            font-weight: 800;
+            color: #111827;
+          }
+          .pdf-title {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 28px;
+            padding: 14px 0 8px;
+            border-bottom: 2px solid #d0d5dd;
+            font-size: 22px;
+            font-weight: 800;
+          }
+          .pdf-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eaecf0;
+          }
+          .pdf-row span {
+            overflow-wrap: anywhere;
+          }
+          .pdf-row strong {
+            flex: 0 0 auto;
+          }
+          .pdf-net {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 28px;
+            padding: 18px 20px;
+            border-radius: 8px;
+            background: #111827;
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 800;
+          }
+        </style>
+        <div class="pdf-registration">
+          <span>ทะเบียน ${escapeHtml(record.registration || "-")}</span>
+        </div>
+        <div class="pdf-title">
+          <span>รายการทำงาน เป็นจำนวนเงิน</span>
+          <span>${formatter.format(Number(record.work_total || 0))}</span>
+        </div>
+        ${workRows}
+        <div class="pdf-title">
+          <span>รายการค่าใช้จ่าย เป็นจำนวนเงิน</span>
+          <span>${formatter.format(Number(record.expense_total || 0))}</span>
+        </div>
+        ${expenseRows}
+        <div class="pdf-net">
+          <span>ยอดสุทธิหลังหักค่าใช้จ่ายเหลือ</span>
+          <span>${formatter.format(Number(record.net_total || 0))}</span>
+        </div>
+      `;
+
+      document.body.appendChild(report);
+      if (document.fonts?.ready) await document.fonts.ready;
+      const canvas = await html2canvas(report, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true
+      });
+      report.remove();
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgData = canvas.toDataURL("image/png");
+
+      let remainingHeight = imgHeight;
+      let y = 0;
+      pdf.addImage(imgData, "PNG", 0, y, imgWidth, imgHeight);
+      remainingHeight -= pageHeight;
+
+      while (remainingHeight > 0) {
+        y -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, y, imgWidth, imgHeight);
+        remainingHeight -= pageHeight;
+      }
+
+      return pdf.output("blob");
+    }
+
+    async function saveRecordPdf(id) {
+      try {
+        const record = lastSearchRows.find((row) => row.id === id);
+        if (!record) {
+          databaseStatus.textContent = "ไม่พบข้อมูลที่ต้องการบันทึกเป็น PDF";
+          return;
+        }
+
+        databaseStatus.textContent = "กำลังสร้างไฟล์ PDF...";
+        const blob = await createRecordPdfBlob(record);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${safeDownloadName(record.registration || record.id)}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        databaseStatus.textContent = "บันทึกไฟล์ PDF แล้ว";
+        showToast("บันทึกไฟล์ PDF แล้ว");
+      } catch (error) {
+        databaseStatus.textContent = error.message || "บันทึกไฟล์ PDF ไม่สำเร็จ";
+        showToast(error.message || "บันทึกไฟล์ PDF ไม่สำเร็จ", "error");
+      }
+    }
+
     async function updateExistingRecord(client, payload, id) {
       const { data: existingRows, error: findError } = await client
         .from("work_summaries")
@@ -1356,28 +1637,19 @@
         .eq("id", id);
 
       if (error) throw error;
-
-      databaseStatus.textContent = "กำลังสร้างไฟล์ PDF ใหม่...";
-      const pdfPath = await uploadSummaryPdf(client, payload, id);
-      const { error: pdfUpdateError } = await client
-        .from("work_summaries")
-        .update({ pdf_path: pdfPath })
-        .eq("id", id);
-
-      if (pdfUpdateError) throw pdfUpdateError;
-      return pdfPath;
     }
 
     async function saveCurrentRecord() {
       try {
-        databaseStatus.textContent = "กำลังบันทึกข้อมูลและสร้างไฟล์ PDF...";
+        if (!validateBeforeSave()) return;
+        databaseStatus.textContent = "กำลังบันทึกข้อมูล...";
         const client = await getSupabaseClient();
         const payload = collectCurrentData();
         if (currentEditingId) {
           await updateExistingRecord(client, payload, currentEditingId);
-          databaseStatus.textContent = "แก้ไขข้อมูลและไฟล์ PDF เรียบร้อยแล้ว";
-          alert("บันทึกข้อมูลสำเร็จแล้ว");
-          await searchOldRecords();
+          databaseStatus.textContent = "แก้ไขข้อมูลเรียบร้อยแล้ว";
+          showToast("บันทึกข้อมูลสำเร็จแล้ว");
+          reloadAfterSuccess();
           return;
         }
 
@@ -1388,20 +1660,13 @@
           .limit(1);
         if (error) throw error;
         currentEditingId = data?.[0]?.id || null;
-        if (!currentEditingId) throw new Error("บันทึกข้อมูลแล้ว แต่ไม่พบรหัสรายการสำหรับสร้าง PDF");
-
-        databaseStatus.textContent = "กำลังอัปโหลดไฟล์ PDF...";
-        const pdfPath = await uploadSummaryPdf(client, payload, currentEditingId);
-        const { error: pdfUpdateError } = await client
-          .from("work_summaries")
-          .update({ pdf_path: pdfPath })
-          .eq("id", currentEditingId);
-
-        if (pdfUpdateError) throw pdfUpdateError;
-        databaseStatus.textContent = "บันทึกข้อมูลและไฟล์ PDF เรียบร้อยแล้ว";
-        alert("บันทึกข้อมูลสำเร็จแล้ว");
+        if (!currentEditingId) throw new Error("บันทึกข้อมูลแล้ว แต่ไม่พบรหัสรายการ");
+        databaseStatus.textContent = "บันทึกข้อมูลเรียบร้อยแล้ว";
+        showToast("บันทึกข้อมูลสำเร็จแล้ว");
+        reloadAfterSuccess();
       } catch (error) {
         databaseStatus.textContent = error.message || "บันทึกข้อมูลไม่สำเร็จ";
+        showToast(error.message || "บันทึกข้อมูลไม่สำเร็จ", "error");
       }
     }
 
@@ -1450,7 +1715,7 @@
         const client = await getSupabaseClient();
         const payload = collectCurrentData();
         await updateExistingRecord(client, payload, currentEditingId);
-        databaseStatus.textContent = "แก้ไขข้อมูลและไฟล์ PDF เรียบร้อยแล้ว";
+        databaseStatus.textContent = "แก้ไขข้อมูลเรียบร้อยแล้ว";
         await searchOldRecords();
       } catch (error) {
         databaseStatus.textContent = error.message || "แก้ไขข้อมูลไม่สำเร็จ";
@@ -1466,15 +1731,6 @@
 
         databaseStatus.textContent = "กำลังลบข้อมูล...";
         const client = await getSupabaseClient();
-        if (record?.pdf_path) {
-          databaseStatus.textContent = "กำลังลบไฟล์ PDF...";
-          const { error: storageError } = await client.storage
-            .from(SUPABASE_PDF_BUCKET)
-            .remove([record.pdf_path]);
-
-          if (storageError) throw storageError;
-        }
-
         databaseStatus.textContent = "กำลังลบข้อมูล...";
         const { error } = await client
           .from("work_summaries")
@@ -1490,34 +1746,6 @@
       }
     }
 
-    async function downloadRecordPdf(id) {
-      try {
-        const record = lastSearchRows.find((row) => row.id === id);
-        if (!record?.pdf_path) {
-          databaseStatus.textContent = "รายการนี้ยังไม่มีไฟล์ PDF";
-          return;
-        }
-
-        databaseStatus.textContent = "กำลังเตรียมไฟล์ PDF...";
-        const client = await getSupabaseClient();
-        const { data, error } = await client.storage
-          .from(SUPABASE_PDF_BUCKET)
-          .createSignedUrl(record.pdf_path, 60);
-
-        if (error) throw error;
-        const link = document.createElement("a");
-        link.href = data.signedUrl;
-        link.download = `${safeFilePart(record.registration)}.pdf`;
-        link.target = "_blank";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        databaseStatus.textContent = "เปิดไฟล์ PDF แล้ว";
-      } catch (error) {
-        databaseStatus.textContent = error.message || "ดาวน์โหลด PDF ไม่สำเร็จ";
-      }
-    }
-
     async function searchOldRecords() {
       try {
         const query = historySearchInput.value.trim();
@@ -1525,7 +1753,7 @@
         const client = await getSupabaseClient();
         const { data, error } = await client
           .from("work_summaries")
-          .select("id, created_at, registration, work_items, expense_items, work_total, expense_total, net_total, pdf_path, search_text")
+          .select("id, created_at, registration, work_items, expense_items, work_total, expense_total, net_total, search_text")
           .order("created_at", { ascending: false })
           .limit(50);
 
@@ -1541,9 +1769,9 @@
     function createRow(data = {}) {
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td><input type="text" class="work-name" placeholder="เช่น ขนส่งสินค้า" value="${data.name || ""}" aria-label="รายการทำงาน"></td>
-        <td><input type="number" class="unit-price" min="0" step="0.01" placeholder="0.00" value="${data.price || ""}" aria-label="หน่วยละ"></td>
-        <td>
+        <td data-label="รายการทำงาน"><input type="text" class="work-name" placeholder="เช่น ขนส่งสินค้า" value="${data.name || ""}" aria-label="รายการทำงาน"></td>
+        <td data-label="หน่วยละ"><input type="number" class="unit-price" min="0" step="0.01" placeholder="0.00" value="${data.price || ""}" aria-label="หน่วยละ"></td>
+        <td data-label="จำนวนเที่ยว / วัน">
           <div class="trip-control">
             <input type="number" class="trip-amount" min="0" step="1" placeholder="0" value="${data.trips || ""}" aria-label="จำนวนเที่ยวหรือวัน">
             <select class="trip-unit" aria-label="เลือกหน่วยจำนวน">
@@ -1552,7 +1780,7 @@
             </select>
           </div>
         </td>
-        <td class="row-total">฿0.00</td>
+        <td class="row-total" data-label="รวมเป็นจำนวนเงิน">฿0.00</td>
         <td class="delete-col">
           <button class="icon-button delete-row" type="button" title="ลบรายการ" aria-label="ลบรายการ">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1569,8 +1797,8 @@
     function createExpenseRow(data = {}) {
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td><input type="text" class="expense-name" placeholder="เช่น ค่าน้ำมัน" value="${data.name || ""}" aria-label="รายการค่าใช้จ่าย"></td>
-        <td><input type="number" class="expense-amount" min="0" step="0.01" placeholder="0.00" value="${data.amount || ""}" aria-label="จำนวนเงินที่หัก"></td>
+        <td data-label="รายการค่าใช้จ่าย"><input type="text" class="expense-name" placeholder="เช่น ค่าน้ำมัน" value="${data.name || ""}" aria-label="รายการค่าใช้จ่าย"></td>
+        <td data-label="จำนวนเงินที่หัก"><input type="number" class="expense-amount" min="0" step="0.01" placeholder="0.00" value="${data.amount || ""}" aria-label="จำนวนเงินที่หัก"></td>
         <td class="delete-col">
           <button class="icon-button delete-expense" type="button" title="ลบค่าใช้จ่าย" aria-label="ลบค่าใช้จ่าย">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1641,24 +1869,32 @@
       `).join("");
     }
 
-    function openPdfSaveDialog() {
-      const originalTitle = document.title;
-      updateTotals();
-      document.title = "สรุปรายการทำงาน";
-      window.print();
-      setTimeout(() => {
-        document.title = originalTitle;
-      }, 500);
+    function hasFormData() {
+      const hasWorkRows = itemsBody.querySelectorAll("tr").length > 0;
+      const hasExpenseRows = expensesBody.querySelectorAll("tr").length > 0;
+      return hasWorkRows || hasExpenseRows || Boolean(summaryNote.value.trim());
     }
 
     function clearFormData() {
+      if (hasFormData()) {
+        const confirmed = window.confirm("คุณต้องการล้างข้อมูลทั้งหมดหรือไม่? ข้อมูลที่กรอกไว้จะหายไป");
+        if (!confirmed) return;
+      }
       alert("ล้างข้อมูลสำเร็จแล้ว");
       window.location.reload();
     }
 
     addRowBtn.addEventListener("click", () => createRow());
     addExpenseBtn.addEventListener("click", () => createExpenseRow());
-    pdfBtn.addEventListener("click", openPdfSaveDialog);
+    pdfBtn.addEventListener("click", saveCurrentRecord);
+    document.addEventListener("input", (event) => {
+      if (event.target.matches("input, textarea, select")) {
+        event.target.classList.remove("is-invalid");
+        if (!document.querySelector(".is-invalid")) {
+          validationSummary.hidden = true;
+        }
+      }
+    });
     logoutButton.addEventListener("click", async () => {
       try {
         const client = await getSupabaseClient();
@@ -1686,9 +1922,10 @@
         return;
       }
 
-      const downloadButton = event.target.closest(".download-pdf");
-      if (!downloadButton) return;
-      downloadRecordPdf(downloadButton.dataset.id);
+      const savePdfButton = event.target.closest(".save-record-pdf");
+      if (savePdfButton) {
+        saveRecordPdf(savePdfButton.dataset.id);
+      }
     });
 
     itemsBody.addEventListener("input", updateTotals);
