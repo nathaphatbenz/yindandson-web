@@ -1966,10 +1966,10 @@
       // this uses the minimum readable table font rather than scaling the whole page.
       const fillerHeightMm = (() => {
         if (printableRowCount >= 20) return 0;
-        if (printableRowCount >= 18) return Math.max(0, 16 - (printableRowCount - 18) * 8);
-        if (printableRowCount >= 15) return 46 - (printableRowCount - 15) * 9;
-        if (printableRowCount >= 11) return 84 - (printableRowCount - 11) * 9.5;
-        return Math.max(86, 148 - printableRowCount * 5.8);
+        if (printableRowCount >= 18) return Math.max(0, 6 - (printableRowCount - 18) * 3);
+        if (printableRowCount >= 15) return Math.max(6, 24 - (printableRowCount - 15) * 6);
+        if (printableRowCount >= 11) return 72 - (printableRowCount - 11) * 9;
+        return Math.max(80, 140 - printableRowCount * 5.8);
       })();
       const referenceRow = isReceiptDocument(data.documentType)
         ? `
