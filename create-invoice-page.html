@@ -1966,10 +1966,10 @@
       // this uses the minimum readable table font rather than scaling the whole page.
       const fillerHeightMm = (() => {
         if (printableRowCount >= 20) return 0;
-        if (printableRowCount >= 18) return Math.max(0, 8 - (printableRowCount - 18) * 4);
-        if (printableRowCount >= 15) return 34 - (printableRowCount - 15) * 8;
-        if (printableRowCount >= 11) return 72 - (printableRowCount - 11) * 9;
-        return Math.max(78, 138 - printableRowCount * 5.8);
+        if (printableRowCount >= 18) return Math.max(0, 16 - (printableRowCount - 18) * 8);
+        if (printableRowCount >= 15) return 46 - (printableRowCount - 15) * 9;
+        if (printableRowCount >= 11) return 84 - (printableRowCount - 11) * 9.5;
+        return Math.max(86, 148 - printableRowCount * 5.8);
       })();
       const referenceRow = isReceiptDocument(data.documentType)
         ? `
@@ -2031,7 +2031,7 @@
   <meta charset="UTF-8">
   <title>${escapeHtml(fileTitle)}</title>
   <style>
-    @page { size: A4; margin: 7mm; }
+    @page { size: A4; margin: 3mm; }
     * {
       box-sizing: border-box;
       font-family: inherit;
@@ -2050,8 +2050,8 @@
       line-height: var(--pdf-body-line);
     }
     .sheet {
-      width: 196mm;
-      min-height: 283mm;
+      width: 204mm;
+      min-height: 291mm;
       margin: 0 auto;
       padding: var(--pdf-page-padding);
       background: #fff;
@@ -2427,15 +2427,15 @@
     @media print {
       html,
       body {
-        width: 196mm;
-        height: 283mm;
-        min-height: 283mm;
+        width: 204mm;
+        height: 291mm;
+        min-height: 291mm;
         overflow: visible;
       }
       .sheet {
-        width: 196mm;
-        height: 283mm;
-        min-height: 283mm;
+        width: 204mm;
+        height: 291mm;
+        min-height: 291mm;
         margin: 0;
         padding: 0;
         overflow: visible;
