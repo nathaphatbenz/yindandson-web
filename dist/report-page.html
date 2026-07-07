@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report - YinD</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-invoice-client.js"></script>
+  <script src="yind-auth.js"></script>
+  <script>requireYindAuth("report-page.html");</script>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #667085;
+      --line: #dde5ef;
+      --primary: #0f766e;
+      --primary-dark: #0b5f59;
+      --soft: #e6f5f2;
+      --shadow: 0 8px 20px rgba(23, 32, 51, 0.04);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Noto Sans Thai", "Segoe UI", Tahoma, sans-serif;
+      line-height: 1.5;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+
+    .top-utility { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+    .user-menu, .action-menu { position: relative; }
+    .user-menu summary, .action-menu summary { list-style: none; }
+    .user-menu summary::-webkit-details-marker, .action-menu summary::-webkit-details-marker { display: none; }
+    .menu-panel { position: absolute; right: 0; top: calc(100% + 8px); z-index: 20; min-width: 220px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: #fff; box-shadow: 0 16px 34px rgba(15,23,42,.16); }
+    .menu-item { display: flex; align-items: center; width: 100%; min-height: 38px; border: 0; border-radius: 7px; padding: 8px 10px; color: var(--text); background: transparent; font: inherit; font-size: .9rem; font-weight: 750; text-align: left; text-decoration: none; cursor: pointer; }
+    .menu-item:hover { background: #f3f6fb; }
+    .menu-item svg { width: 16px; height: 16px; margin-right: 8px; }
+
+    .hero, .toolbar, .table-heading, .summary-grid, .actions {
+      display: flex;
+      align-items: center;
+    }
+
+    .hero {
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 3px;
+      color: var(--primary);
+      font-size: 0.82rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    h1, h2, p { margin-top: 0; }
+    h1 { margin-bottom: 5px; font-size: 2rem; letter-spacing: 0; }
+    h2 { margin: 0; font-size: 1.12rem; letter-spacing: 0; }
+    .subtitle { margin-bottom: 0; color: var(--muted); }
+
+    .hero-actions, .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+
+    [data-ntpbenz-only][hidden] { display: none !important; }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 9px 14px;
+      color: #fff;
+      background: var(--primary);
+      font: inherit;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .button:hover { background: var(--primary-dark); }
+    .button.ghost { color: var(--muted); border-color: #cfd9e6; background: #fff; }
+    .button.ghost:hover { color: var(--text); background: #f8fafc; }
+    .button.active { color: var(--primary); border-color: rgba(15, 118, 110, 0.35); background: var(--soft); }
+    .button svg { width: 16px; height: 16px; stroke-width: 2.1; }
+
+    .toolbar {
+      justify-content: space-between;
+      gap: 18px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .filters { display: flex; gap: 12px; flex-wrap: wrap; }
+    .filter-field { min-width: 172px; }
+    label { display: block; margin-bottom: 6px; color: #344054; font-size: 0.9rem; font-weight: 700; }
+    select {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid #ccd6e3;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text);
+      background: #fff;
+      font: inherit;
+    }
+    select:focus { border-color: var(--primary); outline: 0; box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12); }
+
+    .summary-grid {
+      align-items: stretch;
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .summary-item {
+      flex: 1;
+      min-width: 0;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+    .summary-label { display: block; color: var(--muted); font-size: 0.88rem; font-weight: 700; }
+    .summary-value { display: block; margin-top: 4px; color: var(--text); font-size: 1.2rem; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .table-shell {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .table-heading { justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid var(--line); }
+    .table-heading p { margin: 3px 0 0; color: var(--muted); font-size: 0.9rem; }
+    .status { min-height: 22px; margin: 12px 0 0; color: var(--primary); font-weight: 700; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; min-width: 940px; border-collapse: collapse; }
+    th, td { padding: 13px 16px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+    th { color: #475467; background: #f8fafc; font-size: 0.86rem; font-weight: 900; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: #fbfefd; }
+    tbody tr.cancelled-row { background: #fff1f2; }
+    tbody tr.cancelled-row td { color: #b42318; font-weight: 800; }
+    .document-number { color: #0f5f5a; font-weight: 900; }
+    .cancelled-row .document-number { color: #b42318; }
+    .reference-number { color: #344054; font-weight: 800; }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 25px;
+      padding: 3px 9px;
+      border: 1px solid #b8e2d8;
+      border-radius: 999px;
+      color: #067647;
+      background: #ecfdf3;
+      font-size: 0.78rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .status-badge.reserved { color: #a15c00; border-color: #fed7aa; background: #fff7ed; }
+    .status-badge.cancelled { color: #b42318; border-color: #fecdd3; background: #fff1f2; }
+
+    .mobile-list { display: none; padding: 14px; gap: 12px; }
+    .report-card { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: #fff; }
+    .report-card h3 { margin: 0 0 10px; font-size: 1rem; }
+    .report-card dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; color: var(--muted); font-size: 0.9rem; }
+    .report-card dt { font-weight: 700; }
+    .report-card dd { margin: 0; color: var(--text); font-weight: 700; }
+    .report-card.cancelled { border-color: #fecaca; background: #fff1f2; }
+    .report-card.cancelled h3, .report-card.cancelled dd { color: #b42318; }
+
+    .empty { display: none; min-height: 240px; align-items: center; justify-content: center; padding: 28px; color: var(--muted); text-align: center; font-weight: 700; }
+
+    @media (max-width: 760px) {
+      .page { width: min(100% - 20px, 680px); padding: 22px 0; }
+      .hero, .toolbar { align-items: stretch; flex-direction: column; }
+      h1 { font-size: 1.8rem; }
+      .hero-actions .button, .toolbar .button { width: 100%; }
+      .hero-actions .action-menu { width: 100%; }
+      .hero-actions .action-menu > summary,
+      .top-utility .user-menu > summary { width: 100%; }
+      .hero-actions .menu-panel,
+      .top-utility .menu-panel { right: 0; left: auto; max-width: calc(100vw - 20px); width: 100%; min-width: 0; }
+      .filters { display: grid; grid-template-columns: 1fr 1fr; }
+      .filter-field { min-width: 0; }
+      .summary-grid { display: grid; grid-template-columns: 1fr; }
+      .table-wrap { display: none; }
+      .mobile-list { display: grid; }
+      .table-heading { align-items: stretch; flex-direction: column; }
+      .table-heading .button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="top-utility">
+      <details class="user-menu">
+        <summary class="button ghost"><i data-lucide="user" aria-hidden="true"></i>ผู้ใช้งาน</summary>
+        <div class="menu-panel">
+          <button class="menu-item" id="logoutButton" type="button"><i data-lucide="log-out" aria-hidden="true"></i>ออกจากระบบ</button>
+        </div>
+      </details>
+    </div>
+    <header class="hero">
+      <div>
+        <p class="eyebrow">YinD &amp; Son</p>
+        <h1>Report</h1>
+        <p class="subtitle">รายงานใบเสร็จรับเงิน / ใบกำกับภาษี</p>
+      </div>
+      <nav class="hero-actions" aria-label="เมนูหลัก">
+        <button class="button" id="savePdfButton" type="button"><i data-lucide="file-down" aria-hidden="true"></i>บันทึก PDF</button>
+        <details class="action-menu">
+          <summary class="button ghost"><i data-lucide="more-horizontal" aria-hidden="true"></i>เพิ่มเติม</summary>
+          <div class="menu-panel">
+            <a class="menu-item" href="dashboard-page.html"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
+            <a class="menu-item" href="report-page.html" aria-current="page" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
+            <a class="menu-item" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
+            <a class="menu-item" href="monthly-summary-page.html" data-hide-yodsapong hidden><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>สรุปรายเดือน</a>
+            <a class="menu-item" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
+            <a class="menu-item" href="create-invoice-page.html"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้างเอกสาร</a>
+          </div>
+        </details>
+      </nav>
+    </header>
+
+    <section aria-label="ตัวกรองรายงาน">
+      <div class="toolbar">
+        <div class="filters">
+          <div class="filter-field">
+            <label for="monthFilter">เดือน</label>
+            <select id="monthFilter"></select>
+          </div>
+          <div class="filter-field">
+            <label for="yearFilter">ปี</label>
+            <select id="yearFilter"></select>
+          </div>
+        </div>
+      </div>
+      <p class="status" id="statusMessage" aria-live="polite"></p>
+    </section>
+
+    <section class="summary-grid" aria-label="สรุปรายงาน">
+      <article class="summary-item">
+        <span class="summary-label">จำนวนใบกำกับภาษี</span>
+        <strong class="summary-value" id="receiptCount">0 ใบ</strong>
+      </article>
+      <article class="summary-item">
+        <span class="summary-label">เลข RE แรกของเดือน</span>
+        <strong class="summary-value" id="firstReceiptNumber">-</strong>
+      </article>
+      <article class="summary-item">
+        <span class="summary-label">เลข RE ล่าสุดของเดือน</span>
+        <strong class="summary-value" id="lastReceiptNumber">-</strong>
+      </article>
+    </section>
+
+    <section class="table-shell" aria-labelledby="reportTableTitle">
+      <div class="table-heading">
+        <div>
+          <h2 id="reportTableTitle">รายการใบเสร็จรับเงิน / ใบกำกับภาษี</h2>
+          <p id="reportPeriod"></p>
+        </div>
+      </div>
+      <div class="empty" id="emptyState">ไม่พบข้อมูลใบเสร็จรับเงิน / ใบกำกับภาษีในเดือนที่เลือก</div>
+      <div class="table-wrap" id="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>วันที่ออกเอกสาร</th>
+              <th>หมายเลขใบเสร็จ/ใบกำกับภาษี</th>
+              <th>อ้างอิงใบวางบิล</th>
+              <th>ชื่อบริษัท</th>
+              <th>สถานะเอกสาร</th>
+            </tr>
+          </thead>
+          <tbody id="reportTableBody"></tbody>
+        </table>
+      </div>
+      <div class="mobile-list" id="mobileList"></div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    const LOGIN_USERNAME_KEY = "yind_login_username";
+    const currentLoginUsername = sessionStorage.getItem(LOGIN_USERNAME_KEY);
+    document.querySelectorAll("[data-ntpbenz-only]").forEach((element) => {
+      const isNtpbenz = currentLoginUsername === "ntpbenz";
+      element.hidden = !isNtpbenz;
+      element.style.display = isNtpbenz ? "" : "none";
+    });
+    document.querySelectorAll("[data-hide-yodsapong]").forEach((element) => {
+      const shouldHide = currentLoginUsername === "yodsapong";
+      element.hidden = shouldHide;
+      element.style.display = shouldHide ? "none" : "";
+    });
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+    document.querySelector("#logoutButton").addEventListener("click", signOutOfYind);
+    const monthFilter = document.querySelector("#monthFilter");
+    const yearFilter = document.querySelector("#yearFilter");
+    const savePdfButton = document.querySelector("#savePdfButton");
+    const statusMessage = document.querySelector("#statusMessage");
+    const receiptCount = document.querySelector("#receiptCount");
+    const firstReceiptNumber = document.querySelector("#firstReceiptNumber");
+    const lastReceiptNumber = document.querySelector("#lastReceiptNumber");
+    const reportPeriod = document.querySelector("#reportPeriod");
+    const tableBody = document.querySelector("#reportTableBody");
+    const tableWrap = document.querySelector("#tableWrap");
+    const mobileList = document.querySelector("#mobileList");
+    const emptyState = document.querySelector("#emptyState");
+    const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+    let reportRecords = [];
+    let actualReportRecords = [];
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatDisplayDate(value) {
+      if (!value) return "-";
+      const [year, month, day] = String(value).slice(0, 10).split("-");
+      return year && month && day ? `${day}/${month}/${Number(year) + 543}` : value;
+    }
+
+    function getLocalDate() {
+      const now = new Date();
+      return { month: now.getMonth() + 1, year: now.getFullYear() + 543 };
+    }
+
+    function renderSelectOptions() {
+      const current = getLocalDate();
+      monthFilter.innerHTML = monthNames.map((name, index) => `<option value="${index + 1}">${name}</option>`).join("");
+      yearFilter.innerHTML = [current.year - 1, current.year, current.year + 1]
+        .map((year) => `<option value="${year}">${year}</option>`).join("");
+      monthFilter.value = String(current.month);
+      yearFilter.value = String(current.year);
+    }
+
+    function parseReceiptSequence(documentNumber) {
+      const match = String(documentNumber || "").match(/^(RE-\d{4}-)(\d{3,4})$/i);
+      return match ? { prefix: match[1], width: match[2].length, sequence: Number(match[2]) } : null;
+    }
+
+    function addCancelledReceiptGaps(records) {
+      const parsedRecords = records
+        .map((record) => ({ record, parsed: parseReceiptSequence(record.receipt_number) }))
+        .filter((item) => item.parsed);
+      if (parsedRecords.length < 2) return records;
+
+      const sameSeries = parsedRecords.filter((item) => item.parsed.prefix === parsedRecords[0].parsed.prefix);
+      const numbers = new Map(sameSeries.map((item) => [item.parsed.sequence, item.record]));
+      const sequences = [...numbers.keys()].sort((a, b) => a - b);
+      const firstSequence = sequences[0];
+      const lastSequence = sequences[sequences.length - 1];
+      const { prefix, width } = sameSeries[0].parsed;
+      const completed = [];
+
+      for (let sequence = firstSequence; sequence <= lastSequence; sequence += 1) {
+        const existingRecord = numbers.get(sequence);
+        completed.push(existingRecord || {
+          document_date: "",
+          receipt_number: `${prefix}${String(sequence).padStart(width, "0")}`,
+          invoice_number: "ยกเลิก",
+          customer_name: "ยกเลิก",
+          isCancelledGap: true
+        });
+      }
+
+      return completed;
+    }
+
+    function renderSummary(records) {
+      receiptCount.textContent = `${records.length} ใบ`;
+      firstReceiptNumber.textContent = records[0]?.receipt_number || "-";
+      lastReceiptNumber.textContent = records[records.length - 1]?.receipt_number || "-";
+    }
+
+    function formatDocumentStatus(status) {
+      const value = String(status || "issued").toLowerCase();
+      return {
+        issued: "Issued",
+        reserved: "Reserved",
+        cancelled: "Cancelled"
+      }[value] || value;
+    }
+
+    function renderRows(records) {
+      tableBody.innerHTML = records.map((record) => `
+        <tr class="${record.isCancelledGap ? "cancelled-row" : ""}">
+          <td>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(formatDisplayDate(record.document_date))}</td>
+          <td class="document-number">${escapeHtml(record.receipt_number)}</td>
+          <td class="reference-number">${record.isCancelledGap ? "ยกเลิก" : escapeHtml(record.invoice_number)}</td>
+          <td>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(record.customer_name)}</td>
+          <td><span class="status-badge ${record.isCancelledGap ? "cancelled" : escapeHtml(record.document_status)}">${record.isCancelledGap ? "ยกเลิก" : escapeHtml(formatDocumentStatus(record.document_status))}</span></td>
+        </tr>
+      `).join("");
+
+      mobileList.innerHTML = records.map((record) => `
+        <article class="report-card ${record.isCancelledGap ? "cancelled" : ""}">
+          <h3>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(record.customer_name)}</h3>
+          <dl>
+            <dt>วันที่ออกเอกสาร</dt><dd>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(formatDisplayDate(record.document_date))}</dd>
+            <dt>เลข RE</dt><dd>${escapeHtml(record.receipt_number)}</dd>
+            <dt>อ้างอิง INV</dt><dd>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(record.invoice_number)}</dd>
+            <dt>สถานะเอกสาร</dt><dd>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(formatDocumentStatus(record.document_status))}</dd>
+          </dl>
+        </article>
+      `).join("");
+    }
+
+    async function loadReport() {
+      const month = Number(monthFilter.value);
+      const year = Number(yearFilter.value);
+      statusMessage.textContent = "กำลังโหลดรายงาน...";
+      savePdfButton.disabled = true;
+
+      try {
+        actualReportRecords = await fetchReceiptReport({ year, month });
+        reportRecords = addCancelledReceiptGaps(actualReportRecords);
+        renderSummary(actualReportRecords);
+        renderRows(reportRecords);
+        const hasRecords = reportRecords.length > 0;
+        emptyState.style.display = hasRecords ? "none" : "flex";
+        tableWrap.style.display = hasRecords ? "block" : "none";
+        mobileList.style.display = hasRecords ? "grid" : "none";
+        reportPeriod.textContent = `${monthNames[month - 1]} ${year}`;
+        statusMessage.textContent = "";
+      } catch (error) {
+        console.error(error);
+        reportRecords = [];
+        actualReportRecords = [];
+        renderSummary(actualReportRecords);
+        renderRows(reportRecords);
+        tableWrap.style.display = "none";
+        mobileList.style.display = "none";
+        emptyState.style.display = "flex";
+        statusMessage.textContent = error.message || "โหลดรายงานจาก Supabase ไม่สำเร็จ";
+      } finally {
+        savePdfButton.disabled = actualReportRecords.length === 0;
+      }
+    }
+
+    function savePdf() {
+      const printableWindow = window.open("", "_blank");
+      if (!printableWindow) {
+        statusMessage.textContent = "กรุณาอนุญาต popup เพื่อบันทึกไฟล์ PDF";
+        return;
+      }
+
+      const rows = reportRecords.map((record) => `
+        <tr class="${record.isCancelledGap ? "cancelled" : ""}">
+          <td>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(formatDisplayDate(record.document_date))}</td>
+          <td>${escapeHtml(record.receipt_number)}</td>
+          <td>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(record.invoice_number)}</td>
+          <td>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(record.customer_name)}</td>
+          <td>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(formatDocumentStatus(record.document_status))}</td>
+        </tr>
+      `).join("");
+      const period = `${monthNames[Number(monthFilter.value) - 1]} ${yearFilter.value}`;
+      const isDenseReport = reportRecords.length > 24;
+      const html = `<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>YinD Report ${escapeHtml(period)}</title>
+  <style>
+    @page { size: A4 portrait; margin: 7mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #172033; font-family: "Noto Sans Thai", Tahoma, sans-serif; font-size: 9px; line-height: 1.25; }
+    .header { display: flex; justify-content: space-between; gap: 14px; padding-bottom: 6px; border-bottom: 1.5px solid #0f766e; }
+    .brand { color: #0f766e; font-size: 12px; font-weight: 900; }
+    h1 { margin: 2px 0 0; font-size: 15px; }
+    .period { margin: 2px 0 0; color: #667085; font-size: 9px; }
+    .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin: 8px 0; }
+    .summary div { min-height: 38px; padding: 5px 6px; border: 1px solid #cfd9e6; }
+    .summary span { display: block; color: #667085; font-size: 7.5px; }
+    .summary strong { display: block; margin-top: 2px; font-size: 9px; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th, td { border: 1px solid #b9c7d8; padding: 4px 5px; text-align: left; vertical-align: top; word-break: break-word; }
+    th { color: #344054; background: #eef4f7; font-size: 8px; line-height: 1.2; }
+    tr.cancelled td { color: #b42318; background: #fff1f2; font-weight: 800; }
+    th:nth-child(1), td:nth-child(1) { width: 15%; }
+    th:nth-child(2), td:nth-child(2),
+    th:nth-child(3), td:nth-child(3) { width: 22%; font-weight: 700; }
+    th:nth-child(4), td:nth-child(4) { width: 27%; }
+    th:nth-child(5), td:nth-child(5) { width: 14%; }
+    .footer { margin-top: 6px; color: #667085; font-size: 7px; text-align: right; }
+    body.dense { font-size: 7.5px; }
+    body.dense .header { padding-bottom: 4px; }
+    body.dense .brand { font-size: 10px; }
+    body.dense h1 { font-size: 12px; }
+    body.dense .summary { margin: 5px 0; }
+    body.dense .summary div { min-height: 30px; padding: 4px; }
+    body.dense .summary span { font-size: 6.5px; }
+    body.dense .summary strong { font-size: 7.5px; }
+    body.dense th, body.dense td { padding: 2.5px 3px; }
+    body.dense th { font-size: 7px; }
+  </style>
+</head>
+<body class="${isDenseReport ? "dense" : ""}">
+  <div class="header">
+    <div><div class="brand">YinD &amp; Son</div><h1>รายงานใบเสร็จรับเงิน / ใบกำกับภาษี</h1></div>
+    <div class="period">${escapeHtml(period)}</div>
+  </div>
+  <div class="summary">
+    <div><span>จำนวนใบกำกับภาษี</span><strong>${actualReportRecords.length} ใบ</strong></div>
+    <div><span>เลข RE แรกของเดือน</span><strong>${escapeHtml(actualReportRecords[0]?.receipt_number || "-")}</strong></div>
+    <div><span>เลข RE ล่าสุดของเดือน</span><strong>${escapeHtml(actualReportRecords[actualReportRecords.length - 1]?.receipt_number || "-")}</strong></div>
+  </div>
+  <table>
+    <thead><tr><th>วันที่ออกเอกสาร</th><th>หมายเลขใบเสร็จ/ใบกำกับภาษี</th><th>อ้างอิงใบวางบิล</th><th>ชื่อบริษัท</th><th>สถานะเอกสาร</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="footer">YinD Report</div>
+</body>
+</html>`;
+
+      printableWindow.document.open();
+      printableWindow.document.write(html);
+      printableWindow.document.close();
+      window.setTimeout(() => {
+        printableWindow.focus();
+        printableWindow.print();
+      }, 250);
+    }
+
+    monthFilter.addEventListener("change", loadReport);
+    yearFilter.addEventListener("change", loadReport);
+    savePdfButton.addEventListener("click", savePdf);
+
+    renderSelectOptions();
+    loadReport();
+  </script>
+</body>
+</html>

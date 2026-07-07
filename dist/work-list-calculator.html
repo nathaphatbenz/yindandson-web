@@ -1,0 +1,1950 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>รายการทำงาน</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    (async () => {
+      const authClient = window.supabase.createClient(
+        "https://abxmjdosihhvffoflgon.supabase.co",
+        "sb_publishable__xQ3zF61gKR3liv-ejBH5Q_bAVUcesH"
+      );
+      const { data, error } = await authClient.auth.getSession();
+      if (error || data.session?.user?.email?.toLowerCase() !== "ntpbenz@yind.local") {
+        window.location.replace("dashboard-page.html");
+      }
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #667085;
+      --line: #d9e0ea;
+      --accent: #0f766e;
+      --accent-dark: #0b5f59;
+      --danger: #b42318;
+      --soft: #edf7f5;
+      --shadow: 0 18px 45px rgba(31, 41, 55, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.14), transparent 34%),
+        linear-gradient(315deg, rgba(245, 158, 11, 0.13), transparent 30%),
+        var(--bg);
+    }
+
+    .app {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+
+    .top-utility {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+
+    .user-menu,
+    .action-menu {
+      position: relative;
+    }
+
+    .user-menu summary,
+    .action-menu summary {
+      list-style: none;
+    }
+
+    .user-menu summary::-webkit-details-marker,
+    .action-menu summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .menu-panel {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      z-index: 20;
+      min-width: 220px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.16);
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      min-height: 38px;
+      border: 0;
+      border-radius: 7px;
+      padding: 8px 10px;
+      color: var(--text);
+      background: transparent;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 750;
+      text-align: left;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .menu-item:hover {
+      background: #f3f6fb;
+    }
+
+    .user-menu > summary.secondary,
+    .action-menu > summary.secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 18px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      background: #fff;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 8px;
+      color: white;
+      background: var(--accent);
+      box-shadow: 0 12px 24px rgba(15, 118, 110, 0.24);
+      flex: 0 0 auto;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .page-helper {
+      margin: 8px 0 0;
+      color: #475467;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .required {
+      color: var(--danger);
+      font-weight: 900;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .dashboard-link {
+      border-radius: 8px;
+      min-height: 42px;
+      padding: 0 15px;
+      color: var(--accent-dark);
+      background: var(--soft);
+      font: inherit;
+      font-weight: 650;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: transform 0.16s ease, background 0.16s ease;
+    }
+
+    .dashboard-link:hover {
+      background: #d9f0eb;
+      transform: translateY(-1px);
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      min-height: 42px;
+      padding: 0 15px;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary {
+      color: white;
+      background: var(--accent);
+      box-shadow: 0 10px 20px rgba(15, 118, 110, 0.22);
+    }
+
+    .primary:hover {
+      background: var(--accent-dark);
+    }
+
+    .secondary {
+      color: var(--accent-dark);
+      background: var(--soft);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 18px;
+      align-items: start;
+      min-width: 0;
+    }
+
+    .main-column {
+      display: grid;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .table-wrap,
+    .summary {
+      background: var(--panel);
+      border: 1px solid rgba(217, 224, 234, 0.8);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .section-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th,
+    td {
+      padding: 13px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+
+    th {
+      color: #344054;
+      background: #f9fafb;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    input {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid #cfd8e3;
+      border-radius: 8px;
+      padding: 9px 11px;
+      font: inherit;
+      color: var(--text);
+      background: white;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.13);
+    }
+
+    input.is-invalid,
+    select.is-invalid,
+    textarea.is-invalid {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.12);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 96px;
+      resize: vertical;
+      border: 1px solid #cfd8e3;
+      border-radius: 8px;
+      padding: 10px 11px;
+      font: inherit;
+      color: var(--text);
+      background: white;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.13);
+    }
+
+    input[type="number"] {
+      text-align: right;
+    }
+
+    select {
+      min-height: 42px;
+      border: 1px solid #cfd8e3;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font: inherit;
+      color: var(--text);
+      background: white;
+      outline: none;
+    }
+
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.13);
+    }
+
+    .trip-control {
+      display: grid;
+      grid-template-columns: minmax(88px, 1fr) 82px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .money,
+    .row-total {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .row-total {
+      font-weight: 750;
+      color: var(--accent-dark);
+    }
+
+    .icon-button {
+      width: 42px;
+      padding: 0;
+      color: var(--danger);
+      background: #fff1f0;
+    }
+
+    .summary {
+      padding: 20px;
+      position: sticky;
+      top: 18px;
+    }
+
+    .summary-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 18px;
+      font-size: 20px;
+    }
+
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+    }
+
+    .summary-line strong {
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .summary-note {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .summary-note label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .registration-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .registration-actions {
+      display: grid;
+      gap: 8px;
+    }
+
+    .pdf-note-text {
+      display: none;
+      min-height: 24px;
+      padding: 10px 11px;
+      border: 1px solid #98a2b3;
+      border-radius: 8px;
+      color: var(--text);
+      white-space: pre-wrap;
+    }
+
+    .pdf-registration-title {
+      display: none;
+    }
+
+    .grand-total {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 8px;
+      color: white;
+      background: var(--accent);
+    }
+
+    .grand-total span {
+      display: block;
+      font-size: 14px;
+      opacity: 0.88;
+    }
+
+    .grand-total strong {
+      display: block;
+      margin-top: 4px;
+      font-size: clamp(28px, 4vw, 36px);
+      line-height: 1.15;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+
+    .net-total {
+      background: #111827;
+    }
+
+    .expense-total-box {
+      background: #9f1239;
+    }
+
+    .pdf-detail-list {
+      display: none;
+      margin: 10px 0 0;
+      padding: 10px 0 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.35);
+      font-size: 13px;
+    }
+
+    .pdf-detail-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 4px 0;
+    }
+
+    .pdf-detail-line span:first-child {
+      overflow-wrap: anywhere;
+    }
+
+    .pdf-detail-line span:last-child {
+      flex: 0 0 auto;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .empty {
+      padding: 28px;
+      text-align: center;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      display: none;
+    }
+
+    .empty.show {
+      display: block;
+    }
+
+    .validation-summary {
+      margin: 0 0 18px;
+      padding: 14px 16px;
+      border: 1px solid #fda29b;
+      border-radius: 8px;
+      color: #7a271a;
+      background: #fff4f2;
+      box-shadow: 0 10px 24px rgba(180, 35, 24, 0.08);
+    }
+
+    .validation-summary strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .validation-summary ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .validation-summary[hidden] {
+      display: none;
+    }
+
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 80;
+      max-width: min(360px, calc(100vw - 32px));
+      padding: 14px 16px;
+      border: 1px solid #a7f3d0;
+      border-radius: 8px;
+      color: #064e3b;
+      background: #ecfdf3;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+      font-weight: 800;
+      line-height: 1.45;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.error {
+      border-color: #fda29b;
+      color: #7a271a;
+      background: #fff4f2;
+    }
+
+    .database-panel {
+      padding-bottom: 18px;
+    }
+
+    .database-note {
+      max-width: 720px;
+      margin: 8px 0 0;
+      color: #475467;
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .database-controls {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      padding: 18px;
+      align-items: start;
+    }
+
+    .database-status {
+      padding: 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .search-results {
+      display: grid;
+      gap: 10px;
+      padding: 14px 18px 0;
+    }
+
+    .result-item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcfe;
+    }
+
+    .result-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .result-meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .result-section {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+
+    .result-section-title {
+      margin-bottom: 6px;
+      font-weight: 750;
+      color: var(--text);
+    }
+
+    .result-detail-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 3px 0;
+      color: #344054;
+      font-size: 14px;
+    }
+
+    .result-detail-line span:first-child {
+      overflow-wrap: anywhere;
+    }
+
+    .result-detail-line span:last-child {
+      flex: 0 0 auto;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-net-total {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: white;
+      background: #111827;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .danger-button {
+      color: white;
+      background: var(--danger);
+    }
+
+    .danger-button:hover {
+      background: #8f1f17;
+    }
+
+    @media screen and (max-width: 880px) {
+      .topbar,
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .actions {
+        width: 100%;
+        justify-content: stretch;
+      }
+
+      .actions button,
+      .actions .dashboard-link,
+      .actions .action-menu {
+        flex: 1 1 150px;
+      }
+
+      .actions .action-menu > summary,
+      .top-utility .user-menu > summary {
+        width: 100%;
+      }
+
+      .actions .menu-panel,
+      .top-utility .menu-panel {
+        right: 0;
+        left: auto;
+        max-width: calc(100vw - 20px);
+        width: 100%;
+        min-width: 0;
+      }
+
+      .section-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .section-head button {
+        width: 100%;
+      }
+
+      .table-scroll {
+        overflow: visible;
+      }
+
+      table {
+        min-width: 0;
+      }
+
+      table thead {
+        display: none;
+      }
+
+      table,
+      table tbody,
+      table tr,
+      table td {
+        display: block;
+        width: 100%;
+      }
+
+      table tbody {
+        padding: 12px;
+      }
+
+      table tr {
+        margin-bottom: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        overflow: hidden;
+      }
+
+      table td {
+        padding: 12px;
+        border-bottom: 1px solid #eef2f7;
+      }
+
+      table td:last-child {
+        border-bottom: 0;
+      }
+
+      table td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 6px;
+        color: #475467;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      table td.delete-col::before {
+        content: "";
+        display: none;
+      }
+
+      .money,
+      .row-total {
+        text-align: left;
+      }
+
+      input[type="number"] {
+        text-align: left;
+      }
+
+      .trip-control {
+        grid-template-columns: 1fr;
+      }
+
+      .icon-button {
+        width: 100%;
+      }
+
+      .database-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .registration-row {
+        grid-template-columns: 1fr;
+      }
+
+      .summary {
+        position: static;
+      }
+
+      .toast {
+        right: 16px;
+        bottom: 16px;
+      }
+    }
+
+    @media print {
+      @page {
+        margin: 12mm;
+      }
+
+      body {
+        background: white;
+        font-family: "Noto Sans Thai", "Tahoma", sans-serif;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+
+      .app {
+        width: 100%;
+        padding: 0;
+      }
+
+      .topbar,
+      .actions,
+      .delete-col,
+      .icon-button {
+        display: none;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .main-column {
+        gap: 10px;
+      }
+
+      .table-wrap,
+      .summary {
+        box-shadow: none;
+        border-color: #98a2b3;
+        break-inside: avoid;
+      }
+
+      .section-head {
+        padding: 10px 12px;
+      }
+
+      .section-head p {
+        display: none;
+      }
+
+      .table-scroll {
+        overflow: visible;
+      }
+
+      .main-column {
+        display: none;
+      }
+
+      .database-panel {
+        display: none;
+      }
+
+      table {
+        min-width: 0;
+        table-layout: fixed;
+      }
+
+      th,
+      td {
+        padding: 8px 9px;
+        font-size: 12px;
+      }
+
+      input {
+        min-height: 0;
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+        background: transparent;
+      }
+
+      textarea {
+        min-height: 70px;
+        border-color: #98a2b3;
+        resize: none;
+        box-shadow: none;
+      }
+
+      #summaryNote {
+        display: none;
+      }
+
+      .pdf-note-text {
+        display: none;
+      }
+
+      .pdf-registration-title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        margin-bottom: 12px;
+        padding: 14px 16px;
+        border: 2px solid #111827;
+        border-radius: 8px;
+        color: #111827;
+        font-size: 30px;
+        font-weight: 800;
+        text-align: center;
+        break-inside: avoid;
+      }
+
+      .truck-icon {
+        flex: 0 0 auto;
+      }
+
+      .summary-note {
+        display: none;
+      }
+
+      .summary-title {
+        display: none;
+      }
+
+      .summary {
+        break-inside: avoid;
+      }
+
+      .grand-total {
+        color: white;
+        margin-top: 10px;
+        padding: 12px;
+        break-inside: avoid;
+      }
+
+      .grand-total strong {
+        font-size: 24px;
+      }
+
+      .pdf-detail-list {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="top-utility">
+      <details class="user-menu">
+        <summary class="secondary">ผู้ใช้งาน</summary>
+        <div class="menu-panel">
+          <button class="menu-item" type="button" id="logoutButton">ออกจากระบบ</button>
+        </div>
+      </details>
+    </div>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+            <path d="M5 5.5h14M5 12h14M5 18.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M4.8 5.5l1.4 1.4L9 4.1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>รายการทำงาน</h1>
+          <p class="subtitle">กรอกงาน ราคา/หน่วย และจำนวนเที่ยว ระบบจะคำนวณยอดให้ทันที</p>
+          <p class="page-helper">หน้านี้ใช้บันทึกรายการทำงานลงระบบ ช่องที่มี <span class="required">*</span> จำเป็นต้องกรอก</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="primary" type="button" id="pdfBtn" title="บันทึกข้อมูลลงระบบ">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M14 3v6h6M9 15h6M12 12v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          บันทึก
+        </button>
+        <details class="action-menu">
+          <summary class="secondary">เพิ่มเติม</summary>
+          <div class="menu-panel">
+            <a class="menu-item" href="dashboard-page.html">แดชบอร์ด</a>
+          </div>
+        </details>
+      </div>
+    </header>
+
+    <div class="validation-summary" id="validationSummary" role="alert" tabindex="-1" hidden></div>
+    <div class="toast" id="toastMessage" role="status" aria-live="polite"></div>
+
+    <section class="layout">
+      <div class="main-column">
+        <div class="table-wrap">
+          <div class="section-head">
+            <div>
+              <h2>รายการทำงาน <span class="required">*</span></h2>
+              <p>เพิ่มรายการงาน ราคา/หน่วย และจำนวนเที่ยว</p>
+            </div>
+            <button class="primary" type="button" id="addRowBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              เพิ่มรายการ
+            </button>
+          </div>
+          <div class="table-scroll">
+            <table aria-label="ตารางรายการทำงาน">
+              <thead>
+                <tr>
+                  <th style="width: 42%;">รายการทำงาน</th>
+                  <th style="width: 18%;" class="money">หน่วยละ</th>
+                  <th style="width: 16%;" class="money">จำนวนเที่ยว / วัน</th>
+                  <th style="width: 18%;" class="money">รวมเป็นจำนวนเงิน</th>
+                  <th style="width: 6%;" class="delete-col"></th>
+                </tr>
+              </thead>
+              <tbody id="itemsBody"></tbody>
+            </table>
+          </div>
+          <div class="empty" id="emptyState">ยังไม่มีรายการ กด “เพิ่มรายการ” เพื่อเริ่มกรอกงาน</div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="section-head">
+            <div>
+              <h2>รายการค่าใช้จ่าย</h2>
+              <p>กรอกค่าใช้จ่ายที่ต้องการหักออกจากยอดรวม</p>
+            </div>
+            <button class="secondary" type="button" id="addExpenseBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              เพิ่มค่าใช้จ่าย
+            </button>
+          </div>
+          <div class="table-scroll">
+            <table aria-label="ตารางรายการค่าใช้จ่าย">
+              <thead>
+                <tr>
+                  <th style="width: 68%;">รายการค่าใช้จ่าย</th>
+                  <th style="width: 24%;" class="money">จำนวนเงินที่หัก</th>
+                  <th style="width: 8%;" class="delete-col"></th>
+                </tr>
+              </thead>
+              <tbody id="expensesBody"></tbody>
+            </table>
+          </div>
+          <div class="empty" id="expensesEmptyState">ยังไม่มีรายการค่าใช้จ่าย</div>
+        </div>
+
+        <div class="table-wrap database-panel">
+          <div class="section-head">
+            <div>
+              <h2>ค้นหารายการเก่า</h2>
+              <p>ค้นหารายการเดิมจากทะเบียนหรือคำอธิบาย</p>
+              <p class="database-note">ส่วนนี้ใช้ค้นหาประวัติรายการทำงานที่เคยบันทึกไว้ในระบบ</p>
+            </div>
+          </div>
+          <div class="database-controls">
+            <input type="search" id="historySearchInput" placeholder="ค้นหาทะเบียน เช่น ชบ 1234">
+            <button class="secondary" type="button" id="searchSupabaseBtn">ค้นหา</button>
+          </div>
+          <div class="database-status" id="databaseStatus">กรอกหมายเลขทะเบียนเพื่อค้นหา</div>
+          <div class="search-results" id="searchResults"></div>
+        </div>
+      </div>
+
+      <aside class="summary" aria-label="สรุปยอดรวม">
+        <div class="pdf-registration-title">
+          <svg class="truck-icon" width="46" height="46" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+            <path d="M5 22h34v22H5zM39 29h10l8 8v7H39z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+            <path d="M49 29v8h8M10 22v-6h24v6" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="17" cy="47" r="5" stroke="currentColor" stroke-width="4"/>
+            <circle cx="42" cy="47" r="5" stroke="currentColor" stroke-width="4"/>
+            <circle cx="54" cy="47" r="5" stroke="currentColor" stroke-width="4"/>
+          </svg>
+          <span id="registrationPdfTitle">ทะเบียน -</span>
+        </div>
+        <h2 class="summary-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 19V5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M14 3v6h6M8 13h8M8 17h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          สรุป
+        </h2>
+        <div class="summary-line">
+          <span>จำนวนรายการ</span>
+          <strong id="itemCount">0</strong>
+        </div>
+        <div class="summary-note">
+          <label for="summaryNote">ทะเบียน <span class="required">*</span></label>
+          <div class="registration-row">
+            <textarea id="summaryNote" placeholder="กรอกทะเบียน"></textarea>
+            <div class="registration-actions">
+              <button class="secondary" type="button" id="clearFormBtn">ล้างข้อมูล</button>
+            </div>
+          </div>
+          <div class="pdf-note-text" id="summaryNotePdf"></div>
+        </div>
+        <div class="grand-total">
+          <span>รายการทำงาน เป็นจำนวนเงิน</span>
+          <strong id="grandTotal">฿0.00</strong>
+          <div class="pdf-detail-list" id="workPdfDetails"></div>
+        </div>
+        <div class="grand-total expense-total-box">
+          <span>รายการค่าใช้จ่าย เป็นจำนวนเงิน</span>
+          <strong id="expenseTotal">฿0.00</strong>
+          <div class="pdf-detail-list" id="expensePdfDetails"></div>
+        </div>
+        <div class="grand-total net-total">
+          <span>ยอดสุทธิหลังหักค่าใช้จ่ายเหลือ</span>
+          <strong id="netTotal">฿0.00</strong>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const itemsBody = document.getElementById("itemsBody");
+    const expensesBody = document.getElementById("expensesBody");
+    const emptyState = document.getElementById("emptyState");
+    const expensesEmptyState = document.getElementById("expensesEmptyState");
+    const itemCount = document.getElementById("itemCount");
+    const grandTotal = document.getElementById("grandTotal");
+    const expenseTotal = document.getElementById("expenseTotal");
+    const netTotal = document.getElementById("netTotal");
+    const workPdfDetails = document.getElementById("workPdfDetails");
+    const expensePdfDetails = document.getElementById("expensePdfDetails");
+    const summaryNote = document.getElementById("summaryNote");
+    const summaryNotePdf = document.getElementById("summaryNotePdf");
+    const registrationPdfTitle = document.getElementById("registrationPdfTitle");
+    const addRowBtn = document.getElementById("addRowBtn");
+    const addExpenseBtn = document.getElementById("addExpenseBtn");
+    const pdfBtn = document.getElementById("pdfBtn");
+    const logoutButton = document.getElementById("logoutButton");
+    const historySearchInput = document.getElementById("historySearchInput");
+    const clearFormBtn = document.getElementById("clearFormBtn");
+    const searchSupabaseBtn = document.getElementById("searchSupabaseBtn");
+    const databaseStatus = document.getElementById("databaseStatus");
+    const searchResults = document.getElementById("searchResults");
+    const validationSummary = document.getElementById("validationSummary");
+    const toastMessage = document.getElementById("toastMessage");
+
+    const SUPABASE_URL = "https://abxmjdosihhvffoflgon.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__xQ3zF61gKR3liv-ejBH5Q_bAVUcesH";
+    let supabaseClient = null;
+    let currentEditingId = null;
+    let lastSearchRows = [];
+
+    const formatter = new Intl.NumberFormat("th-TH", {
+      style: "currency",
+      currency: "THB",
+      minimumFractionDigits: 2
+    });
+
+    function toNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function clearValidation() {
+      validationSummary.hidden = true;
+      validationSummary.innerHTML = "";
+      document.querySelectorAll(".is-invalid").forEach((field) => {
+        field.classList.remove("is-invalid");
+      });
+    }
+
+    function showValidationErrors(errors) {
+      validationSummary.innerHTML = `
+        <strong>กรุณาตรวจสอบข้อมูลก่อนบันทึก</strong>
+        <ul>${errors.map((error) => `<li>${escapeHtml(error.message)}</li>`).join("")}</ul>
+      `;
+      validationSummary.hidden = false;
+      validationSummary.focus({ preventScroll: true });
+      validationSummary.scrollIntoView({ behavior: "smooth", block: "start" });
+      const firstField = errors.find((error) => error.field)?.field;
+      if (firstField) {
+        firstField.classList.add("is-invalid");
+        setTimeout(() => firstField.focus(), 120);
+      }
+    }
+
+    let toastTimer = null;
+
+    function showToast(message, type = "success") {
+      window.clearTimeout(toastTimer);
+      toastMessage.textContent = message;
+      toastMessage.classList.toggle("error", type === "error");
+      toastMessage.classList.add("show");
+      toastTimer = window.setTimeout(() => {
+        toastMessage.classList.remove("show");
+      }, 3200);
+    }
+
+    function reloadAfterSuccess() {
+      window.setTimeout(() => {
+        window.location.reload();
+      }, 900);
+    }
+
+    function validateBeforeSave() {
+      clearValidation();
+      const errors = [];
+      const workRows = [...itemsBody.querySelectorAll("tr")];
+
+      if (!summaryNote.value.trim()) {
+        errors.push({ message: "กรุณากรอกทะเบียน", field: summaryNote });
+      }
+
+      if (workRows.length === 0) {
+        errors.push({ message: "กรุณาเพิ่มรายการทำงานอย่างน้อย 1 รายการ", field: addRowBtn });
+      }
+
+      workRows.forEach((row, index) => {
+        const rowNumber = index + 1;
+        const nameField = row.querySelector(".work-name");
+        const priceField = row.querySelector(".unit-price");
+        const tripField = row.querySelector(".trip-amount");
+
+        if (!nameField.value.trim()) {
+          errors.push({ message: `รายการทำงานลำดับที่ ${rowNumber}: กรุณากรอกรายการทำงาน`, field: nameField });
+        }
+
+        if (toNumber(priceField.value) <= 0) {
+          errors.push({ message: `รายการทำงานลำดับที่ ${rowNumber}: หน่วยละต้องมากกว่า 0`, field: priceField });
+        }
+
+        if (toNumber(tripField.value) <= 0) {
+          errors.push({ message: `รายการทำงานลำดับที่ ${rowNumber}: จำนวนเที่ยว/วันต้องมากกว่า 0`, field: tripField });
+        }
+      });
+
+      [...expensesBody.querySelectorAll("tr")].forEach((row, index) => {
+        const rowNumber = index + 1;
+        const nameField = row.querySelector(".expense-name");
+        const amountField = row.querySelector(".expense-amount");
+
+        if (!nameField.value.trim()) {
+          errors.push({ message: `ค่าใช้จ่ายลำดับที่ ${rowNumber}: กรุณากรอกรายการค่าใช้จ่าย`, field: nameField });
+        }
+
+        if (toNumber(amountField.value) <= 0) {
+          errors.push({ message: `ค่าใช้จ่ายลำดับที่ ${rowNumber}: จำนวนเงินที่หักต้องมากกว่า 0`, field: amountField });
+        }
+      });
+
+      errors.forEach((error) => error.field?.classList?.add("is-invalid"));
+      if (errors.length) showValidationErrors(errors);
+      return errors.length === 0;
+    }
+
+    async function getSupabaseClient() {
+      if (SUPABASE_ANON_KEY === "PASTE_SUPABASE_ANON_KEY_HERE") {
+        throw new Error("กรุณาใส่ Supabase anon key ในไฟล์ก่อนใช้งาน");
+      }
+
+      if (supabaseClient) return supabaseClient;
+
+      const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+      supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      return supabaseClient;
+    }
+
+    function collectCurrentData() {
+      updateTotals();
+
+      const workItems = [...itemsBody.querySelectorAll("tr")].map((row) => {
+        const name = row.querySelector(".work-name").value.trim();
+        const unitPrice = toNumber(row.querySelector(".unit-price").value);
+        const quantity = toNumber(row.querySelector(".trip-amount").value);
+        const unit = row.querySelector(".trip-unit").value;
+        return {
+          name,
+          unit_price: unitPrice,
+          quantity,
+          unit,
+          total: unitPrice * quantity
+        };
+      });
+
+      const expenseItems = [...expensesBody.querySelectorAll("tr")].map((row) => {
+        const name = row.querySelector(".expense-name").value.trim();
+        const amount = toNumber(row.querySelector(".expense-amount").value);
+        return { name, amount };
+      });
+
+      const workTotal = workItems.reduce((sum, item) => sum + item.total, 0);
+      const expenseTotalValue = expenseItems.reduce((sum, item) => sum + item.amount, 0);
+      const registration = summaryNote.value.trim();
+      const searchText = [
+        registration,
+        ...workItems.map((item) => `${item.name} ${item.unit_price} ${item.quantity} ${item.unit}`),
+        ...expenseItems.map((item) => `${item.name} ${item.amount}`)
+      ].join(" ");
+
+      return {
+        registration,
+        work_items: workItems,
+        expense_items: expenseItems,
+        work_total: workTotal,
+        expense_total: expenseTotalValue,
+        net_total: workTotal - expenseTotalValue,
+        search_text: searchText
+      };
+    }
+
+    function renderSearchResults(rows) {
+      lastSearchRows = rows;
+
+      if (!rows.length) {
+        searchResults.innerHTML = `<div class="result-item">ไม่พบรายการที่ตรงกับคำค้น</div>`;
+        return;
+      }
+
+      searchResults.innerHTML = rows.map((row) => `
+        <div class="result-item">
+          <strong>ทะเบียน ${row.registration || "-"}</strong>
+          <div class="result-meta">${new Date(row.created_at).toLocaleString("th-TH")}</div>
+          <div class="result-section">
+            <div class="result-section-title">รายละเอียดรายการทำงาน</div>
+            ${renderWorkResultDetails(row.work_items)}
+          </div>
+          <div class="result-section">
+            <div class="result-section-title">รายละเอียดรายการค่าใช้จ่าย</div>
+            ${renderExpenseResultDetails(row.expense_items)}
+          </div>
+          <div class="result-net-total">
+            <span>ยอดสุทธิหลังหักค่าใช้จ่ายเหลือ</span>
+            <span>${formatter.format(Number(row.net_total || 0))}</span>
+          </div>
+          <div class="result-actions">
+            <button class="secondary load-record" type="button" data-id="${row.id}">นำมาแก้ไข</button>
+            <button class="secondary save-record-pdf" type="button" data-id="${row.id}">บันทึกไฟล์ PDF</button>
+            <button class="danger-button delete-record" type="button" data-id="${row.id}">ลบข้อมูล</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderWorkResultDetails(items = []) {
+      if (!items.length) {
+        return `<div class="result-detail-line"><span>ไม่มีรายการ</span><span>${formatter.format(0)}</span></div>`;
+      }
+
+      return items.map((item) => {
+        const name = item.name || "ไม่ระบุรายการ";
+        const unitPrice = Number(item.unit_price || 0);
+        const quantity = Number(item.quantity || 0);
+        const unit = item.unit || "";
+        const total = Number(item.total || unitPrice * quantity || 0);
+        return `
+          <div class="result-detail-line">
+            <span>${name} (${formatter.format(unitPrice)} x ${quantity.toLocaleString("th-TH")} ${unit})</span>
+            <span>${formatter.format(total)}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderExpenseResultDetails(items = []) {
+      if (!items.length) {
+        return `<div class="result-detail-line"><span>ไม่มีรายการ</span><span>${formatter.format(0)}</span></div>`;
+      }
+
+      return items.map((item) => `
+        <div class="result-detail-line">
+          <span>${item.name || "ไม่ระบุรายการ"}</span>
+          <span>${formatter.format(Number(item.amount || 0))}</span>
+        </div>
+      `).join("");
+    }
+
+    function recordMatchesSearch(row, query) {
+      if (!query) return true;
+
+      const searchable = [
+        row.registration,
+        row.search_text,
+        row.work_total,
+        row.expense_total,
+        row.net_total,
+        ...(row.work_items || []).flatMap((item) => [
+          item.name,
+          item.unit_price,
+          item.quantity,
+          item.unit,
+          item.total
+        ]),
+        ...(row.expense_items || []).flatMap((item) => [
+          item.name,
+          item.amount
+        ])
+      ].join(" ").toLowerCase();
+
+      return searchable.includes(query.toLowerCase());
+    }
+
+    function safeDownloadName(value) {
+      const cleaned = String(value || "work-list")
+        .trim()
+        .replace(/[\\/:*?"<>|]+/g, "_")
+        .replace(/\s+/g, "_")
+        .replace(/^_+|_+$/g, "");
+      return cleaned || "work-list";
+    }
+
+    async function createRecordPdfBlob(record) {
+      const { default: html2canvas } = await import("https://esm.sh/html2canvas@1.4.1");
+      const { jsPDF } = await import("https://esm.sh/jspdf@2.5.1");
+      const workItems = record.work_items || [];
+      const expenseItems = record.expense_items || [];
+
+      const workRows = workItems.length
+        ? workItems.map((item) => {
+            const name = escapeHtml(item.name || "ไม่ระบุรายการ");
+            const unitPrice = Number(item.unit_price || 0);
+            const quantity = Number(item.quantity || 0);
+            const unit = escapeHtml(item.unit || "");
+            const total = Number(item.total || unitPrice * quantity || 0);
+            return `
+              <div class="pdf-row">
+                <span>${name} (${formatter.format(unitPrice)} x ${quantity.toLocaleString("th-TH")} ${unit})</span>
+                <strong>${formatter.format(total)}</strong>
+              </div>
+            `;
+          }).join("")
+        : `<div class="pdf-row"><span>ไม่มีรายการ</span><strong>${formatter.format(0)}</strong></div>`;
+
+      const expenseRows = expenseItems.length
+        ? expenseItems.map((item) => `
+            <div class="pdf-row">
+              <span>${escapeHtml(item.name || "ไม่ระบุรายการ")}</span>
+              <strong>${formatter.format(Number(item.amount || 0))}</strong>
+            </div>
+          `).join("")
+        : `<div class="pdf-row"><span>ไม่มีรายการ</span><strong>${formatter.format(0)}</strong></div>`;
+
+      const report = document.createElement("div");
+      report.style.cssText = `
+        position: fixed;
+        left: -10000px;
+        top: 0;
+        width: 794px;
+        min-height: 1123px;
+        padding: 48px;
+        box-sizing: border-box;
+        background: #ffffff;
+        color: #1f2937;
+        font-family: "Noto Sans Thai", "Tahoma", sans-serif;
+        font-size: 18px;
+        line-height: 1.45;
+      `;
+      report.innerHTML = `
+        <style>
+          @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800&display=swap");
+          .pdf-registration {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            border: 3px solid #111827;
+            border-radius: 8px;
+            padding: 18px 20px;
+            font-size: 36px;
+            font-weight: 800;
+            color: #111827;
+          }
+          .pdf-title {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 28px;
+            padding: 14px 0 8px;
+            border-bottom: 2px solid #d0d5dd;
+            font-size: 22px;
+            font-weight: 800;
+          }
+          .pdf-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eaecf0;
+          }
+          .pdf-row span {
+            overflow-wrap: anywhere;
+          }
+          .pdf-row strong {
+            flex: 0 0 auto;
+          }
+          .pdf-net {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 28px;
+            padding: 18px 20px;
+            border-radius: 8px;
+            background: #111827;
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 800;
+          }
+        </style>
+        <div class="pdf-registration">
+          <span>ทะเบียน ${escapeHtml(record.registration || "-")}</span>
+        </div>
+        <div class="pdf-title">
+          <span>รายการทำงาน เป็นจำนวนเงิน</span>
+          <span>${formatter.format(Number(record.work_total || 0))}</span>
+        </div>
+        ${workRows}
+        <div class="pdf-title">
+          <span>รายการค่าใช้จ่าย เป็นจำนวนเงิน</span>
+          <span>${formatter.format(Number(record.expense_total || 0))}</span>
+        </div>
+        ${expenseRows}
+        <div class="pdf-net">
+          <span>ยอดสุทธิหลังหักค่าใช้จ่ายเหลือ</span>
+          <span>${formatter.format(Number(record.net_total || 0))}</span>
+        </div>
+      `;
+
+      document.body.appendChild(report);
+      if (document.fonts?.ready) await document.fonts.ready;
+      const canvas = await html2canvas(report, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true
+      });
+      report.remove();
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgData = canvas.toDataURL("image/png");
+
+      let remainingHeight = imgHeight;
+      let y = 0;
+      pdf.addImage(imgData, "PNG", 0, y, imgWidth, imgHeight);
+      remainingHeight -= pageHeight;
+
+      while (remainingHeight > 0) {
+        y -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, y, imgWidth, imgHeight);
+        remainingHeight -= pageHeight;
+      }
+
+      return pdf.output("blob");
+    }
+
+    async function saveRecordPdf(id) {
+      try {
+        const record = lastSearchRows.find((row) => row.id === id);
+        if (!record) {
+          databaseStatus.textContent = "ไม่พบข้อมูลที่ต้องการบันทึกเป็น PDF";
+          return;
+        }
+
+        databaseStatus.textContent = "กำลังสร้างไฟล์ PDF...";
+        const blob = await createRecordPdfBlob(record);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${safeDownloadName(record.registration || record.id)}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        databaseStatus.textContent = "บันทึกไฟล์ PDF แล้ว";
+        showToast("บันทึกไฟล์ PDF แล้ว");
+      } catch (error) {
+        databaseStatus.textContent = error.message || "บันทึกไฟล์ PDF ไม่สำเร็จ";
+        showToast(error.message || "บันทึกไฟล์ PDF ไม่สำเร็จ", "error");
+      }
+    }
+
+    async function updateExistingRecord(client, payload, id) {
+      const { data: existingRows, error: findError } = await client
+        .from("work_summaries")
+        .select("id")
+        .eq("id", id)
+        .limit(1);
+
+      if (findError) throw findError;
+      if (!existingRows?.length) {
+        throw new Error("ไม่พบรายการเดิม กรุณาค้นหาแล้วกดนำมาแก้ไขอีกครั้ง");
+      }
+
+      const { error } = await client
+        .from("work_summaries")
+        .update(payload)
+        .eq("id", id);
+
+      if (error) throw error;
+    }
+
+    async function saveCurrentRecord() {
+      try {
+        if (!validateBeforeSave()) return;
+        databaseStatus.textContent = "กำลังบันทึกข้อมูล...";
+        const client = await getSupabaseClient();
+        const payload = collectCurrentData();
+        if (currentEditingId) {
+          await updateExistingRecord(client, payload, currentEditingId);
+          databaseStatus.textContent = "แก้ไขข้อมูลเรียบร้อยแล้ว";
+          showToast("บันทึกข้อมูลสำเร็จแล้ว");
+          reloadAfterSuccess();
+          return;
+        }
+
+        const { data, error } = await client
+          .from("work_summaries")
+          .insert(payload)
+          .select("id")
+          .limit(1);
+        if (error) throw error;
+        currentEditingId = data?.[0]?.id || null;
+        if (!currentEditingId) throw new Error("บันทึกข้อมูลแล้ว แต่ไม่พบรหัสรายการ");
+        databaseStatus.textContent = "บันทึกข้อมูลเรียบร้อยแล้ว";
+        showToast("บันทึกข้อมูลสำเร็จแล้ว");
+        reloadAfterSuccess();
+      } catch (error) {
+        databaseStatus.textContent = error.message || "บันทึกข้อมูลไม่สำเร็จ";
+        showToast(error.message || "บันทึกข้อมูลไม่สำเร็จ", "error");
+      }
+    }
+
+    function loadRecordForEditing(id) {
+      const record = lastSearchRows.find((row) => row.id === id);
+      if (!record) {
+        databaseStatus.textContent = "ไม่พบข้อมูลที่เลือก";
+        return;
+      }
+
+      currentEditingId = record.id;
+      summaryNote.value = record.registration || "";
+      itemsBody.innerHTML = "";
+      expensesBody.innerHTML = "";
+
+      (record.work_items || []).forEach((item) => {
+        createRow({
+          name: item.name || "",
+          price: item.unit_price || "",
+          trips: item.quantity || "",
+          unit: item.unit || "เที่ยว"
+        });
+      });
+
+      (record.expense_items || []).forEach((item) => {
+        createExpenseRow({
+          name: item.name || "",
+          amount: item.amount || ""
+        });
+      });
+
+      if (!record.work_items?.length) createRow();
+      updateTotals();
+      databaseStatus.textContent = `กำลังแก้ไขข้อมูลทะเบียน ${record.registration || "-"}`;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function updateCurrentRecord() {
+      try {
+        if (!currentEditingId) {
+          databaseStatus.textContent = "กรุณากดนำรายการเก่ามาแก้ไขก่อน";
+          return;
+        }
+
+        databaseStatus.textContent = "กำลังแก้ไขข้อมูล...";
+        const client = await getSupabaseClient();
+        const payload = collectCurrentData();
+        await updateExistingRecord(client, payload, currentEditingId);
+        databaseStatus.textContent = "แก้ไขข้อมูลเรียบร้อยแล้ว";
+        await searchOldRecords();
+      } catch (error) {
+        databaseStatus.textContent = error.message || "แก้ไขข้อมูลไม่สำเร็จ";
+      }
+    }
+
+    async function deleteOldRecord(id) {
+      try {
+        const record = lastSearchRows.find((row) => row.id === id);
+        const label = record?.registration ? `ทะเบียน ${record.registration}` : "รายการนี้";
+        const confirmed = window.confirm(`ต้องการลบข้อมูล ${label} ใช่ไหม?`);
+        if (!confirmed) return;
+
+        databaseStatus.textContent = "กำลังลบข้อมูล...";
+        const client = await getSupabaseClient();
+        databaseStatus.textContent = "กำลังลบข้อมูล...";
+        const { error } = await client
+          .from("work_summaries")
+          .delete()
+          .eq("id", id);
+
+        if (error) throw error;
+        if (currentEditingId === id) currentEditingId = null;
+        databaseStatus.textContent = "ลบข้อมูลเรียบร้อยแล้ว";
+        await searchOldRecords();
+      } catch (error) {
+        databaseStatus.textContent = error.message || "ลบข้อมูลไม่สำเร็จ";
+      }
+    }
+
+    async function searchOldRecords() {
+      try {
+        const query = historySearchInput.value.trim();
+        databaseStatus.textContent = query ? "กำลังค้นหา..." : "กำลังโหลดรายการล่าสุด...";
+        const client = await getSupabaseClient();
+        const { data, error } = await client
+          .from("work_summaries")
+          .select("id, created_at, registration, work_items, expense_items, work_total, expense_total, net_total, search_text")
+          .order("created_at", { ascending: false })
+          .limit(50);
+
+        if (error) throw error;
+        const rows = (data || []).filter((row) => recordMatchesSearch(row, query)).slice(0, 10);
+        renderSearchResults(rows);
+        databaseStatus.textContent = query ? `พบ ${rows.length} รายการ` : `แสดงรายการล่าสุด ${rows.length} รายการ`;
+      } catch (error) {
+        databaseStatus.textContent = error.message || "ค้นหาไม่สำเร็จ";
+      }
+    }
+
+    function createRow(data = {}) {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td data-label="รายการทำงาน"><input type="text" class="work-name" placeholder="เช่น ขนส่งสินค้า" value="${data.name || ""}" aria-label="รายการทำงาน"></td>
+        <td data-label="หน่วยละ"><input type="number" class="unit-price" min="0" step="0.01" placeholder="0.00" value="${data.price || ""}" aria-label="หน่วยละ"></td>
+        <td data-label="จำนวนเที่ยว / วัน">
+          <div class="trip-control">
+            <input type="number" class="trip-amount" min="0" step="1" placeholder="0" value="${data.trips || ""}" aria-label="จำนวนเที่ยวหรือวัน">
+            <select class="trip-unit" aria-label="เลือกหน่วยจำนวน">
+              <option value="เที่ยว"${data.unit === "เที่ยว" ? " selected" : ""}>เที่ยว</option>
+              <option value="วัน"${data.unit === "วัน" ? " selected" : ""}>วัน</option>
+            </select>
+          </div>
+        </td>
+        <td class="row-total" data-label="รวมเป็นจำนวนเงิน">฿0.00</td>
+        <td class="delete-col">
+          <button class="icon-button delete-row" type="button" title="ลบรายการ" aria-label="ลบรายการ">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </td>
+      `;
+      itemsBody.appendChild(row);
+      updateTotals();
+      row.querySelector("input").focus();
+    }
+
+    function createExpenseRow(data = {}) {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td data-label="รายการค่าใช้จ่าย"><input type="text" class="expense-name" placeholder="เช่น ค่าน้ำมัน" value="${data.name || ""}" aria-label="รายการค่าใช้จ่าย"></td>
+        <td data-label="จำนวนเงินที่หัก"><input type="number" class="expense-amount" min="0" step="0.01" placeholder="0.00" value="${data.amount || ""}" aria-label="จำนวนเงินที่หัก"></td>
+        <td class="delete-col">
+          <button class="icon-button delete-expense" type="button" title="ลบค่าใช้จ่าย" aria-label="ลบค่าใช้จ่าย">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </td>
+      `;
+      expensesBody.appendChild(row);
+      updateTotals();
+      row.querySelector("input").focus();
+    }
+
+    function updateTotals() {
+      let total = 0;
+      let trips = 0;
+      const rows = [...itemsBody.querySelectorAll("tr")];
+      const expenseRows = [...expensesBody.querySelectorAll("tr")];
+      const workDetails = [];
+
+      rows.forEach((row) => {
+        const name = row.querySelector(".work-name").value.trim() || "ไม่ระบุรายการ";
+        const price = toNumber(row.querySelector(".unit-price").value);
+        const tripAmount = toNumber(row.querySelector(".trip-amount").value);
+        const tripUnit = row.querySelector(".trip-unit").value;
+        const rowTotal = price * tripAmount;
+        trips += tripAmount;
+        total += rowTotal;
+        row.querySelector(".row-total").textContent = formatter.format(rowTotal);
+        workDetails.push({
+          label: `${name} (${formatter.format(price)} x ${tripAmount.toLocaleString("th-TH")} ${tripUnit})`,
+          amount: rowTotal
+        });
+      });
+
+      const expenseDetails = [];
+      const expenses = expenseRows.reduce((sum, row) => {
+        const name = row.querySelector(".expense-name").value.trim() || "ไม่ระบุรายการ";
+        const amount = toNumber(row.querySelector(".expense-amount").value);
+        expenseDetails.push({ label: name, amount });
+        return sum + amount;
+      }, 0);
+
+      itemCount.textContent = rows.length.toLocaleString("th-TH");
+      grandTotal.textContent = formatter.format(total);
+      expenseTotal.textContent = formatter.format(expenses);
+      netTotal.textContent = formatter.format(total - expenses);
+      renderPdfDetails(workPdfDetails, workDetails);
+      renderPdfDetails(expensePdfDetails, expenseDetails);
+      const registrationText = summaryNote.value.trim() || "-";
+      summaryNotePdf.textContent = registrationText;
+      registrationPdfTitle.textContent = `ทะเบียน ${registrationText}`;
+      emptyState.classList.toggle("show", rows.length === 0);
+      expensesEmptyState.classList.toggle("show", expenseRows.length === 0);
+    }
+
+    function renderPdfDetails(container, details) {
+      if (details.length === 0) {
+        container.innerHTML = `<div class="pdf-detail-line"><span>ไม่มีรายการ</span><span>${formatter.format(0)}</span></div>`;
+        return;
+      }
+
+      container.innerHTML = details.map((detail) => `
+        <div class="pdf-detail-line">
+          <span>${detail.label}</span>
+          <span>${formatter.format(detail.amount)}</span>
+        </div>
+      `).join("");
+    }
+
+    function hasFormData() {
+      const hasWorkRows = itemsBody.querySelectorAll("tr").length > 0;
+      const hasExpenseRows = expensesBody.querySelectorAll("tr").length > 0;
+      return hasWorkRows || hasExpenseRows || Boolean(summaryNote.value.trim());
+    }
+
+    function clearFormData() {
+      if (hasFormData()) {
+        const confirmed = window.confirm("คุณต้องการล้างข้อมูลทั้งหมดหรือไม่? ข้อมูลที่กรอกไว้จะหายไป");
+        if (!confirmed) return;
+      }
+      alert("ล้างข้อมูลสำเร็จแล้ว");
+      window.location.reload();
+    }
+
+    addRowBtn.addEventListener("click", () => createRow());
+    addExpenseBtn.addEventListener("click", () => createExpenseRow());
+    pdfBtn.addEventListener("click", saveCurrentRecord);
+    document.addEventListener("input", (event) => {
+      if (event.target.matches("input, textarea, select")) {
+        event.target.classList.remove("is-invalid");
+        if (!document.querySelector(".is-invalid")) {
+          validationSummary.hidden = true;
+        }
+      }
+    });
+    logoutButton.addEventListener("click", async () => {
+      try {
+        const client = await getSupabaseClient();
+        await client.auth.signOut();
+      } finally {
+        sessionStorage.removeItem("yind_login_username");
+        window.location.href = "login-page.html";
+      }
+    });
+    clearFormBtn.addEventListener("click", clearFormData);
+    searchSupabaseBtn.addEventListener("click", searchOldRecords);
+    historySearchInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") searchOldRecords();
+    });
+    searchResults.addEventListener("click", (event) => {
+      const button = event.target.closest(".load-record");
+      if (button) {
+        loadRecordForEditing(button.dataset.id);
+        return;
+      }
+
+      const deleteButton = event.target.closest(".delete-record");
+      if (deleteButton) {
+        deleteOldRecord(deleteButton.dataset.id);
+        return;
+      }
+
+      const savePdfButton = event.target.closest(".save-record-pdf");
+      if (savePdfButton) {
+        saveRecordPdf(savePdfButton.dataset.id);
+      }
+    });
+
+    itemsBody.addEventListener("input", updateTotals);
+    summaryNote.addEventListener("input", updateTotals);
+    itemsBody.addEventListener("click", (event) => {
+      const deleteButton = event.target.closest(".delete-row");
+      if (!deleteButton) return;
+      deleteButton.closest("tr").remove();
+      updateTotals();
+    });
+    expensesBody.addEventListener("input", updateTotals);
+    expensesBody.addEventListener("click", (event) => {
+      const deleteButton = event.target.closest(".delete-expense");
+      if (!deleteButton) return;
+      deleteButton.closest("tr").remove();
+      updateTotals();
+    });
+
+    updateTotals();
+  </script>
+</body>
+</html>

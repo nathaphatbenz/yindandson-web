@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - YinD</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #667085;
+      --line: #dde5ef;
+      --primary: #0f766e;
+      --primary-dark: #0b5f59;
+      --danger: #dc2626;
+      --shadow: 0 18px 55px rgba(23, 32, 51, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(244, 247, 251, 0.96)),
+        var(--bg);
+      color: var(--text);
+      font-family: "Noto Sans Thai", "Segoe UI", Tahoma, sans-serif;
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: min(420px, 100%);
+      background: var(--card);
+      border: 1px solid rgba(221, 229, 239, 0.95);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+
+    .brand {
+      margin-bottom: 24px;
+    }
+
+    .truck-logo {
+      width: 100%;
+      max-width: 280px;
+      height: auto;
+      display: block;
+      margin: 0 auto 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.85rem;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+      text-align: center;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: #344054;
+      font-weight: 800;
+      font-size: 0.94rem;
+    }
+
+    input {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid #ccd6e3;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font: inherit;
+      background: #fff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+      outline: none;
+    }
+
+    .button {
+      width: 100%;
+      min-height: 46px;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      background: var(--primary);
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .button:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .status {
+      min-height: 24px;
+      margin: 12px 0 0;
+      color: var(--danger);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 16px;
+      }
+
+      .login-card {
+        padding: 22px;
+      }
+
+      h1 {
+        font-size: 1.55rem;
+      }
+
+      .truck-logo {
+        max-width: 230px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="login-card">
+    <div class="brand">
+      <svg class="truck-logo" viewBox="0 0 360 150" role="img" aria-label="รถบรรทุก YinDandSon">
+        <rect x="22" y="64" width="212" height="54" rx="8" fill="#0f766e"></rect>
+        <rect x="236" y="78" width="64" height="40" rx="6" fill="#0b5f59"></rect>
+        <path d="M300 92h20l18 26h-38z" fill="#0b5f59"></path>
+        <rect x="249" y="86" width="26" height="17" rx="3" fill="#d9f2ef"></rect>
+        <rect x="38" y="76" width="178" height="30" rx="4" fill="#ffffff" opacity="0.96"></rect>
+        <text x="127" y="97" text-anchor="middle" fill="#0f766e" font-family="Segoe UI, Tahoma, sans-serif" font-size="25" font-weight="800">YinDandSon</text>
+        <circle cx="83" cy="121" r="19" fill="#172033"></circle>
+        <circle cx="83" cy="121" r="8" fill="#f4f7fb"></circle>
+        <circle cx="260" cy="121" r="19" fill="#172033"></circle>
+        <circle cx="260" cy="121" r="8" fill="#f4f7fb"></circle>
+        <path d="M28 118h302" stroke="#172033" stroke-width="5" stroke-linecap="round"></path>
+      </svg>
+      <p class="subtitle">เข้าสู่ระบบเพื่อไปยัง Dashboard</p>
+    </div>
+
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="Username" type="text" autocomplete="username" required>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="Password" type="password" autocomplete="current-password" required>
+      </div>
+
+      <button class="button" type="submit">เข้าสู่ระบบ</button>
+      <p class="status" id="loginStatus" aria-live="polite"></p>
+    </form>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-invoice-client.js"></script>
+  <script src="yind-auth.js"></script>
+  <script>
+    const loginForm = document.querySelector("#loginForm");
+    const loginStatus = document.querySelector("#loginStatus");
+    const pageParams = new URLSearchParams(window.location.search);
+    const redirectTo = pageParams.get("redirect") || "dashboard-page.html";
+
+    redirectIfYindAuthenticated(redirectTo);
+
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const username = document.querySelector("#username").value.trim();
+      const password = document.querySelector("#password").value;
+
+      if (!username || !password) {
+        loginStatus.textContent = "กรุณากรอก Username และ Password";
+        return;
+      }
+
+      loginStatus.textContent = "กำลังเข้าสู่ระบบ...";
+      try {
+        await signInToYind(username, password);
+        window.location.href = redirectTo;
+      } catch (error) {
+        loginStatus.textContent = error.message || "Username หรือ Password ไม่ถูกต้อง";
+      }
+    });
+  </script>
+</body>
+</html>
