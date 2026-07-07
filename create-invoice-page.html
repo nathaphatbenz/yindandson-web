@@ -1965,11 +1965,10 @@
       // Keep non-table sections at the normal size. If documents exceed 20 rows,
       // this uses the minimum readable table font rather than scaling the whole page.
       const fillerHeightMm = (() => {
-        if (printableRowCount >= 20) return 0;
-        if (printableRowCount >= 18) return Math.max(0, 6 - (printableRowCount - 18) * 3);
-        if (printableRowCount >= 15) return Math.max(6, 24 - (printableRowCount - 15) * 6);
-        if (printableRowCount >= 11) return 72 - (printableRowCount - 11) * 9;
-        return Math.max(80, 140 - printableRowCount * 5.8);
+        if (printableRowCount >= 18) return 0;
+        if (printableRowCount >= 15) return Math.max(0, 8 - (printableRowCount - 15) * 3);
+        if (printableRowCount >= 11) return Math.max(10, 40 - (printableRowCount - 11) * 7);
+        return Math.max(24, 60 - printableRowCount * 3.5);
       })();
       const referenceRow = isReceiptDocument(data.documentType)
         ? `
@@ -2031,7 +2030,7 @@
   <meta charset="UTF-8">
   <title>${escapeHtml(fileTitle)}</title>
   <style>
-    @page { size: A4; margin: 3mm; }
+    @page { size: A4; margin: 4mm; }
     * {
       box-sizing: border-box;
       font-family: inherit;
@@ -2050,18 +2049,26 @@
       line-height: var(--pdf-body-line);
     }
     .sheet {
-      width: 204mm;
-      min-height: 291mm;
+      width: 202mm;
+      min-height: 289mm;
       margin: 0 auto;
       padding: var(--pdf-page-padding);
       background: #fff;
+      display: flex;
+      flex-direction: column;
       break-inside: avoid;
       page-break-inside: avoid;
+    }
+    .print-document {
+      --pdf-print-width: 202mm;
+      --pdf-print-height: 289mm;
+      width: var(--pdf-print-width);
+      min-height: var(--pdf-print-height);
     }
     .top-note { text-align: right; font-size: var(--pdf-top-note-font); font-weight: 700; margin-bottom: var(--pdf-top-note-margin); }
     .header {
       display: grid;
-      grid-template-columns: 1fr 62mm;
+      grid-template-columns: 1fr 72mm;
       gap: var(--pdf-header-gap);
       align-items: center;
       margin-bottom: var(--pdf-header-margin);
@@ -2096,7 +2103,7 @@
       text-align: center;
       font-size: var(--pdf-doc-title-font);
       font-weight: 800;
-      line-height: 1.22;
+      line-height: 1.05;
     }
     .info-grid {
       display: grid;
@@ -2153,6 +2160,12 @@
     }
     .items {
       border: var(--pdf-table-border);
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    .print-items-table {
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .items th,
     .items td {
@@ -2176,7 +2189,14 @@
       font-size: var(--pdf-row-font);
       line-height: var(--pdf-row-line);
     }
-    .items tbody tr.filler-row td { height: var(--pdf-filler-height); padding-top: 0; padding-bottom: 0; }
+    .items tbody tr.filler-row {
+      height: 100%;
+    }
+    .items tbody tr.filler-row td {
+      height: var(--pdf-filler-height);
+      padding-top: 0;
+      padding-bottom: 0;
+    }
     .items th:last-child,
     .items td:last-child { border-right: 0; }
     .items tbody td { border-bottom: 0; }
@@ -2206,69 +2226,69 @@
     }
     :root {
       --pdf-table-border: 1.15px solid #111827;
-      --pdf-body-font: 10.6px;
-      --pdf-body-line: 1.32;
-      --pdf-page-padding: 5mm 6mm 4mm;
-      --pdf-top-note-font: 11px;
+      --pdf-body-font: 14px;
+      --pdf-body-line: 1.14;
+      --pdf-page-padding: 3.6mm 4.4mm 3.2mm;
+      --pdf-top-note-font: 13px;
       --pdf-top-note-margin: 3px;
-      --pdf-header-gap: 8mm;
-      --pdf-header-margin: 5px;
+      --pdf-header-gap: 5mm;
+      --pdf-header-margin: 4px;
       --pdf-brand-gap: 7px;
       --pdf-brand-margin: 4px;
       --pdf-logo-column: 28mm;
       --pdf-logo-width: 26mm;
       --pdf-logo-height: 20mm;
-      --pdf-company-font: 15.2px;
-      --pdf-company-lines-font: 10.1px;
-      --pdf-company-lines-line: 1.25;
-      --pdf-company-lines-gap: 1.5px;
-      --pdf-doc-title-padding: 3.5mm 3mm;
-      --pdf-doc-title-font: 13.2px;
-      --pdf-info-margin: 4px 0 2.8mm;
+      --pdf-company-font: 18px;
+      --pdf-company-lines-font: 12px;
+      --pdf-company-lines-line: 1.04;
+      --pdf-company-lines-gap: 1px;
+      --pdf-doc-title-padding: 2mm 2.4mm;
+      --pdf-doc-title-font: 18px;
+      --pdf-info-margin: 2px 0 2mm;
       --pdf-info-box-height: 28mm;
       --pdf-customer-padding: 2.5px 7px;
-      --pdf-customer-row-height: 7.6mm;
-      --pdf-customer-row-padding: 2px 0;
-      --pdf-customer-font: 10.4px;
-      --pdf-customer-label-font: 9.8px;
-      --pdf-customer-line: 1.28;
+      --pdf-customer-row-height: 7.4mm;
+      --pdf-customer-row-padding: 1.5px 0;
+      --pdf-customer-font: 14px;
+      --pdf-customer-label-font: 12.5px;
+      --pdf-customer-line: 1.04;
       --pdf-doc-row-padding-x: 5mm;
-      --pdf-doc-row-font: 10.4px;
-      --pdf-doc-row-label-font: 10px;
-      --pdf-doc-value-font: 12.2px;
-      --pdf-doc-number-font: 12.6px;
-      --pdf-cell-padding: 3px 4px;
-      --pdf-head-padding: 2.6px 3px;
-      --pdf-head-font: 9.7px;
-      --pdf-row-height: 6.2mm;
-      --pdf-row-font: 10.2px;
-      --pdf-row-line: 1.32;
-      --pdf-row-money-font: 10.3px;
+      --pdf-doc-row-font: 14px;
+      --pdf-doc-row-label-font: 12.5px;
+      --pdf-doc-value-font: 14.5px;
+      --pdf-doc-number-font: 15px;
+      --pdf-cell-padding: 2.5px 3px;
+      --pdf-head-padding: 1.8px 2.4px;
+      --pdf-head-font: 13px;
+      --pdf-row-height: 7.1mm;
+      --pdf-row-font: 14px;
+      --pdf-row-line: 1.22;
+      --pdf-row-money-font: 14px;
       --pdf-right-padding: 6px;
       --pdf-description-padding-left: 5px;
       --pdf-description-padding-right: 10px;
       --pdf-reference-padding: 2.2mm 3mm;
-      --pdf-reference-font: 9.3px;
+      --pdf-reference-font: 12.5px;
       --pdf-payment-padding: 4px 12mm 2mm;
       --pdf-payment-min-height: 22mm;
-      --pdf-payment-font: 10.2px;
+      --pdf-payment-font: 13px;
       --pdf-check-row-margin: 2px 0;
-      --pdf-billing-note-font: 9.8px;
-      --pdf-billing-note-line: 1.45;
-      --pdf-billing-note-gap: 1.2mm;
-      --pdf-summary-height: 9.6mm;
-      --pdf-summary-label-font: 9.9px;
-      --pdf-summary-value-font: 10.8px;
-      --pdf-words-margin: 2.5mm;
-      --pdf-words-height: 9mm;
-      --pdf-words-font: 10.2px;
-      --pdf-signature-margin: 3.5mm;
+      --pdf-billing-note-font: 12.5px;
+      --pdf-billing-note-line: 1.08;
+      --pdf-billing-note-gap: 0.45mm;
+      --pdf-summary-height: 9mm;
+      --pdf-summary-label-font: 13px;
+      --pdf-summary-value-font: 14px;
+      --pdf-words-margin: 2mm;
+      --pdf-words-height: 8.5mm;
+      --pdf-words-font: 13px;
+      --pdf-signature-margin: 2.6mm;
       --pdf-signature-height: 17mm;
-      --pdf-signature-font: 10.8px;
+      --pdf-signature-font: 13px;
       --pdf-signature-billing-height: 19mm;
-      --pdf-signature-billing-font: 10.3px;
+      --pdf-signature-billing-font: 12.5px;
       --pdf-signature-quotation-height: 19mm;
-      --pdf-signature-quotation-font: 10.3px;
+      --pdf-signature-quotation-font: 12.5px;
       --pdf-index-col: 15mm;
       --pdf-qty-col: 27mm;
       --pdf-price-col: 30mm;
@@ -2279,37 +2299,37 @@
       --pdf-description-col: calc(var(--pdf-left-area-width) - var(--pdf-index-col));
     }
     .pdf-fit-compact {
-      --pdf-row-height: 5.35mm;
-      --pdf-row-font: 9.55px;
-      --pdf-row-line: 1.22;
-      --pdf-row-money-font: 9.65px;
-      --pdf-cell-padding: 2px 3px;
-      --pdf-head-padding: 2px 3px;
+      --pdf-row-height: 5.9mm;
+      --pdf-row-font: 13px;
+      --pdf-row-line: 1.12;
+      --pdf-row-money-font: 13px;
+      --pdf-cell-padding: 1.2px 2.4px;
+      --pdf-head-padding: 1px 2.2px;
     }
     .pdf-fit-dense {
-      --pdf-head-font: 8.8px;
+      --pdf-head-font: 12.4px;
       --pdf-row-height: 4.65mm;
-      --pdf-row-font: 8.8px;
-      --pdf-row-line: 1.13;
-      --pdf-row-money-font: 8.9px;
-      --pdf-cell-padding: 1.3px 2.4px;
-      --pdf-head-padding: 1.5px 2px;
+      --pdf-row-font: 12.4px;
+      --pdf-row-line: 1;
+      --pdf-row-money-font: 12.4px;
+      --pdf-cell-padding: 0.5px 1.8px;
+      --pdf-head-padding: 0.7px 1.6px;
       --pdf-right-padding: 3px;
       --pdf-description-padding-left: 3px;
       --pdf-description-padding-right: 5px;
       --pdf-reference-padding: 1.2mm 2mm;
-      --pdf-reference-font: 8.4px;
+      --pdf-reference-font: 11.6px;
     }
     .pdf-fit-ultra {
-      --pdf-head-font: 8.2px;
+      --pdf-head-font: 12px;
       --pdf-row-height: 4.05mm;
-      --pdf-row-font: 8.1px;
-      --pdf-row-line: 1.08;
-      --pdf-row-money-font: 8.2px;
-      --pdf-cell-padding: 0.9px 2px;
-      --pdf-head-padding: 1px 2px;
+      --pdf-row-font: 12px;
+      --pdf-row-line: 1;
+      --pdf-row-money-font: 12px;
+      --pdf-cell-padding: 0.25px 1.3px;
+      --pdf-head-padding: 0.5px 1.3px;
       --pdf-reference-padding: 0.9mm 1.8mm;
-      --pdf-reference-font: 8px;
+      --pdf-reference-font: 11.2px;
     }
     .w-index { width: var(--pdf-index-col); }
     .w-description { width: var(--pdf-description-col); }
@@ -2327,6 +2347,8 @@
       border-right: var(--pdf-table-border);
       border-bottom: var(--pdf-table-border);
       border-top: 0;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .bottom-table td {
       border: 0;
@@ -2384,8 +2406,16 @@
       background: #f7f8fa;
       padding: 0 8px;
       font-size: var(--pdf-words-font);
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .words .text { text-align: center; font-weight: 700; line-height: 1.25; }
+    .print-footer {
+      margin-top: 0;
+      flex: 0 0 auto;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
     .signature {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -2393,6 +2423,8 @@
       margin-top: var(--pdf-signature-margin);
       border: 1px solid #111827;
       min-height: var(--pdf-signature-height);
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .signature div { position: relative; text-align: center; font-size: var(--pdf-signature-font); font-weight: 700; padding-top: 5px; }
     .signature div + div { border-left: 1px solid #111827; }
@@ -2427,24 +2459,43 @@
     @media print {
       html,
       body {
-        width: 204mm;
-        height: 291mm;
-        min-height: 291mm;
+        width: 202mm;
+        height: 289mm;
+        min-height: 289mm;
         overflow: visible;
       }
       .sheet {
-        width: 204mm;
-        height: 291mm;
-        min-height: 291mm;
+        width: 202mm;
+        height: 289mm;
+        min-height: 289mm;
+        max-height: 289mm;
         margin: 0;
         padding: 0;
         overflow: visible;
+      }
+      .print-document {
+        width: 202mm;
+        height: 289mm;
+        min-height: 289mm;
+        max-height: 289mm;
+        display: flex;
+        flex-direction: column;
+        break-after: avoid;
+        page-break-after: avoid;
+      }
+      .print-footer,
+      .signature,
+      .bottom-table,
+      .words {
+        flex-shrink: 0;
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
     }
   </style>
 </head>
 <body>
-  <div class="sheet ${fitClass}">
+  <div class="sheet print-document ${fitClass}">
     <div class="top-note">${labels.original}</div>
     <div class="header">
       <div>
@@ -2471,7 +2522,7 @@
         <div class="doc-row"><strong>${labels.documentDate}</strong><div>${escapeHtml(data.dateText)}</div></div>
       </div>
     </div>
-    <table class="items">
+    <table class="items print-items-table">
       <colgroup>
         <col class="w-index">
         <col class="w-description">
@@ -2490,32 +2541,34 @@
       </thead>
       <tbody>${rows}</tbody>
     </table>
-    <table class="bottom-table">
-      <colgroup>
-        <col class="w-index">
-        <col class="w-description">
-        <col class="w-qty">
-        <col class="w-price">
-        <col class="w-amount">
-      </colgroup>
-      <tbody>
-        <tr>
-          <td class="payment-cell" colspan="2" rowspan="3">${paymentContent}</td>
-          <td class="summary-label" colspan="2">${labels.subtotal}</td>
-          <td class="summary-value">${formatMoney(data.subtotal)}</td>
-        </tr>
-        <tr>
-          <td class="summary-label" colspan="2">${labels.vat}</td>
-          <td class="summary-value">${formatMoney(data.vatAmount)}</td>
-        </tr>
-        <tr>
-          <td class="summary-label" colspan="2">${labels.grandTotal}</td>
-          <td class="summary-value">${formatMoney(data.grandTotal)}</td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="words"><strong>${labels.amountInWords}</strong><div class="text">( ${escapeHtml(data.grandTotalText)} )</div></div>
-    ${signatureContent}
+    <div class="print-footer">
+      <table class="bottom-table">
+        <colgroup>
+          <col class="w-index">
+          <col class="w-description">
+          <col class="w-qty">
+          <col class="w-price">
+          <col class="w-amount">
+        </colgroup>
+        <tbody>
+          <tr>
+            <td class="payment-cell" colspan="2" rowspan="3">${paymentContent}</td>
+            <td class="summary-label" colspan="2">${labels.subtotal}</td>
+            <td class="summary-value">${formatMoney(data.subtotal)}</td>
+          </tr>
+          <tr>
+            <td class="summary-label" colspan="2">${labels.vat}</td>
+            <td class="summary-value">${formatMoney(data.vatAmount)}</td>
+          </tr>
+          <tr>
+            <td class="summary-label" colspan="2">${labels.grandTotal}</td>
+            <td class="summary-value">${formatMoney(data.grandTotal)}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="words"><strong>${labels.amountInWords}</strong><div class="text">( ${escapeHtml(data.grandTotalText)} )</div></div>
+      ${signatureContent}
+    </div>
   </div>
 </body>
 </html>`;
