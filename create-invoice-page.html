@@ -8,6 +8,11 @@
   <script src="supabase-invoice-client.js"></script>
   <script src="yind-auth.js"></script>
   <script>requireYindAuth("create-invoice-page.html");</script>
+  <script>
+    if (new URLSearchParams(window.location.search).has("printId")) {
+      document.documentElement.classList.add("print-only-route");
+    }
+  </script>
   <style>
     :root {
       --page: #f5f7fb;
@@ -34,6 +39,29 @@
       min-height: 100vh;
       color: var(--ink);
       background: var(--page);
+    }
+
+    .print-only-route body {
+      background: #ffffff;
+    }
+
+    .print-only-route main {
+      display: none !important;
+    }
+
+    .print-loading {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: #475467;
+      background: #ffffff;
+      font: 700 16px/1.5 "Noto Sans Thai", "Segoe UI", Tahoma, sans-serif;
+      text-align: center;
+    }
+
+    .print-loading.error {
+      color: #b42318;
     }
 
     main {
@@ -2592,6 +2620,10 @@
       }, 250);
     }
 
+    function renderPrintOnlyStatus(message, isError = false) {
+      document.body.innerHTML = `<div class="print-loading${isError ? " error" : ""}">${escapeHtml(message)}</div>`;
+    }
+
     async function openStoredPdfDocument() {
       if (!printInvoiceId) {
         return false;
@@ -2599,6 +2631,7 @@
 
       try {
         statusText.textContent = "กำลังโหลดไฟล์ PDF...";
+        renderPrintOnlyStatus("กำลังโหลดเอกสารสำหรับพิมพ์...");
         const record = await fetchInvoiceById(printInvoiceId);
         const referenceInvoiceNumber = record.source_invoice_id
           ? await fetchInvoiceNumberById(record.source_invoice_id)
