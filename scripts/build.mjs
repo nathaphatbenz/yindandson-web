@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 const sourceDirectory = "outputs";
 const outputDirectory = "dist";
-const supportedExtensions = new Set([".html", ".js", ".png"]);
+const supportedExtensions = new Set([".html", ".js", ".png", ".jpg", ".jpeg"]);
 
 await rm(outputDirectory, { recursive: true, force: true });
 await mkdir(outputDirectory, { recursive: true });

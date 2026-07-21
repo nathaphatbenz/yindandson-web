@@ -904,13 +904,17 @@
           <span class="overview-item"><strong id="folderCount">0</strong> Folder</span>
           <span class="overview-item"><strong id="documentCount">0</strong> เอกสาร</span>
         </div>
+        <div class="folder-size-buttons" id="companySwitch" aria-label="เลือกบริษัท">
+          <button class="size-button active" type="button" data-company-code="YDS">YinD &amp; Sons</button>
+          <button class="size-button" type="button" data-company-code="YDH">YinD House</button>
+        </div>
       </div>
       <div class="hero-actions">
-        <a class="button" href="create-invoice-page.html"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้างเอกสาร</a>
+        <a class="button" id="createDocumentButton" href="create-invoice-page.html"><i data-lucide="file-plus-2" aria-hidden="true"></i>สร้างเอกสาร</a>
         <details class="action-menu">
           <summary class="button ghost"><i data-lucide="more-horizontal" aria-hidden="true"></i>เพิ่มเติม</summary>
           <div class="menu-panel">
-            <a class="menu-item" href="create-invoice-page.html?type=quotation"><i data-lucide="file-pen-line" aria-hidden="true"></i>สร้างใบเสนอราคา</a>
+            <a class="menu-item" id="createQuotationButton" href="create-invoice-page.html?type=quotation"><i data-lucide="file-pen-line" aria-hidden="true"></i>สร้างใบเสนอราคา</a>
             <a class="menu-item" href="dashboard-page.html" aria-current="page"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
             <a class="menu-item" href="report-page.html" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
             <a class="menu-item" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
@@ -941,7 +945,7 @@
 
       <div class="empty" id="emptyState">
         <p>ยังไม่มีเอกสารในระบบ</p>
-        <a class="button" href="create-invoice-page.html">สร้างเอกสารแรก</a>
+        <a class="button" id="emptyCreateButton" href="create-invoice-page.html">สร้างเอกสารแรก</a>
       </div>
 
       <div class="folder-view" id="folderView"></div>
@@ -972,7 +976,7 @@
                 <th>วันที่ออกเอกสาร</th>
                 <th>ประเภทเอกสาร</th>
                 <th>สถานะ</th>
-                <th>ใบกำกับภาษี</th>
+                <th id="receiptActionHeader">ใบกำกับภาษี</th>
                 <th>ไฟล์</th>
                 <th>แก้ไข</th>
                 <th>ลบ</th>
@@ -1019,6 +1023,7 @@
       window.lucide.createIcons();
     }
     const FOLDER_SIZE_STORAGE_KEY = "yind_dashboard_folder_size";
+    const COMPANY_STORAGE_KEY = "yind_dashboard_company_code";
     const createInvoiceUrl = "create-invoice-page.html";
     const paginationState = {
       page: 1,
@@ -1030,6 +1035,11 @@
     const folderCount = document.querySelector("#folderCount");
     const documentCount = document.querySelector("#documentCount");
     const folderSizeButtons = Array.from(document.querySelectorAll("[data-folder-size]"));
+    const companyButtons = Array.from(document.querySelectorAll("[data-company-code]"));
+    const createDocumentButton = document.querySelector("#createDocumentButton");
+    const createQuotationButton = document.querySelector("#createQuotationButton");
+    const emptyCreateButton = document.querySelector("#emptyCreateButton");
+    const receiptActionHeader = document.querySelector("#receiptActionHeader");
     const folderView = document.querySelector("#folderView");
     const detailView = document.querySelector("#detailView");
     const detailHeader = document.querySelector("#detailHeader");
@@ -1052,6 +1062,7 @@
     let pendingDeleteId = "";
     let selectedRecordId = "";
     let selectedFolderSize = localStorage.getItem(FOLDER_SIZE_STORAGE_KEY) || "medium";
+    let selectedCompanyCode = normalizeCompanyCode(localStorage.getItem(COMPANY_STORAGE_KEY) || DEFAULT_COMPANY_CODE);
     let invoiceRecords = [];
     let dashboardNotice = sessionStorage.getItem(DASHBOARD_NOTICE_KEY) || "";
 
@@ -1198,10 +1209,30 @@
       const result = await fetchInvoices({
         keyword,
         page: 1,
-        pageSize: 1000
+        pageSize: 1000,
+        companyCode: selectedCompanyCode
       });
 
       invoiceRecords = result.data;
+    }
+
+    function updateCompanyActions() {
+      const suffix = `company=${encodeURIComponent(selectedCompanyCode)}`;
+      if (createDocumentButton) {
+        createDocumentButton.href = `${createInvoiceUrl}?${suffix}`;
+      }
+      if (createQuotationButton) {
+        createQuotationButton.href = `${createInvoiceUrl}?type=quotation&${suffix}`;
+      }
+      if (emptyCreateButton) {
+        emptyCreateButton.href = `${createInvoiceUrl}?${suffix}`;
+      }
+      companyButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.companyCode === selectedCompanyCode);
+      });
+      if (receiptActionHeader) {
+        receiptActionHeader.textContent = selectedCompanyCode === "YDH" ? "ใบเสร็จรับเงิน" : "ใบกำกับภาษี";
+      }
     }
 
     function getFilteredRecords() {
@@ -1227,7 +1258,7 @@
     }
 
     function getEditUrl(id) {
-      return `${createInvoiceUrl}?id=${encodeURIComponent(id)}`;
+      return `${createInvoiceUrl}?id=${encodeURIComponent(id)}&company=${encodeURIComponent(selectedCompanyCode)}`;
     }
 
     function canCreateReceipt(record) {
@@ -1240,8 +1271,7 @@
     function hasLinkedReceiptDocumentLocally(record) {
       return invoiceRecords.some((item) => {
         const isLinkedToThisInv = item.source_invoice_id === record.id;
-        const isReceiptType = item.document_type === "ใบกำกับภาษี / ใบเสร็จรับเงิน"
-          || item.document_type === "ใบเสร็จรับเงิน / ใบกำกับภาษี";
+        const isReceiptType = isReceiptRecord(item);
         return isLinkedToThisInv && isReceiptType;
       });
     }
@@ -1251,9 +1281,10 @@
         return "";
       }
 
+      const receiptLabel = selectedCompanyCode === "YDH" ? "ใบเสร็จรับเงิน" : "ใบกำกับภาษี";
       return hasLinkedReceiptDocumentLocally(record)
-        ? '<span class="receipt-issued-status">ออกใบกำกับภาษีเรียบร้อย</span>'
-        : '<span class="receipt-issued-status pending">ยังไม่ออกใบกำกับภาษี</span>';
+        ? `<span class="receipt-issued-status">ออก${receiptLabel}เรียบร้อย</span>`
+        : `<span class="receipt-issued-status pending">ยังไม่ออก${receiptLabel}</span>`;
     }
 
     function isBillingInvoice(record) {
@@ -1270,6 +1301,26 @@
       return documentNumber.startsWith("QT-")
         || record?.document_group === "QT"
         || documentType.includes("ใบเสนอราคา");
+    }
+
+    function isReceiptRecord(record) {
+      const documentNumber = getDocumentNumberValue(record).toUpperCase();
+      const documentType = String(record?.document_type || "");
+      return documentNumber.startsWith("RE-")
+        || documentNumber.startsWith("RE.")
+        || record?.document_group === "RE"
+        || documentType.includes("ใบเสร็จรับเงิน");
+    }
+
+    function getDisplayDocumentType(record) {
+      if (getRecordCompanyCode(record) === "YDH" && isReceiptRecord(record)) {
+        return "ใบเสร็จรับเงิน";
+      }
+      return record.document_type || "-";
+    }
+
+    function getCreateReceiptActionLabel() {
+      return selectedCompanyCode === "YDH" ? "สร้างใบเสร็จรับเงิน" : "สร้างใบกำกับภาษี";
     }
 
     function getFolderMarkLabel(record) {
@@ -1289,7 +1340,8 @@
 
       const hasReceiptDocument = await hasLinkedReceiptDocument(record.id);
       if (hasReceiptDocument) {
-        const message = "ไม่สามารถลบใบวางบิลได้ เนื่องจากมีใบกำกับภาษี / ใบเสร็จรับเงินที่อ้างอิงอยู่แล้ว";
+        const receiptLabel = selectedCompanyCode === "YDH" ? "ใบเสร็จรับเงิน" : "ใบกำกับภาษี / ใบเสร็จรับเงิน";
+        const message = `ไม่สามารถลบใบวางบิลได้ เนื่องจากมี${receiptLabel}ที่อ้างอิงอยู่แล้ว`;
         statusMessage.textContent = message;
         statusMessage.style.color = "var(--danger)";
         window.alert(message);
@@ -1306,7 +1358,7 @@
     }
 
     function getCreateReceiptUrl(id) {
-      return `${createInvoiceUrl}?receiptFrom=${encodeURIComponent(id)}`;
+      return `${createInvoiceUrl}?receiptFrom=${encodeURIComponent(id)}&company=${encodeURIComponent(selectedCompanyCode)}`;
     }
 
     function renderCreateReceiptAction(record) {
@@ -1314,7 +1366,7 @@
         return "-";
       }
 
-      return `<a class="action-link receipt" href="${getCreateReceiptUrl(record.id)}">สร้างใบกำกับภาษี</a>`;
+      return `<a class="action-link receipt" href="${getCreateReceiptUrl(record.id)}">${escapeHtml(getCreateReceiptActionLabel())}</a>`;
     }
 
     function applyFolderSize(size) {
@@ -1351,7 +1403,7 @@
           <td>${escapeHtml(record.customer_name)}</td>
           <td class="invoice-no">${escapeHtml(record.invoice_number)}</td>
           <td>${escapeHtml(formatDisplayDate(record.document_date))}</td>
-          <td>${escapeHtml(record.document_type)}</td>
+          <td>${escapeHtml(getDisplayDocumentType(record))}</td>
           <td>${renderDocumentStatusBadge(record.document_status, record.document_status_raw)}</td>
           <td>${renderCreateReceiptAction(record)}</td>
           <td><button class="action-button file-button" type="button" data-file-id="${escapeHtml(record.id)}" aria-label="เปิดไฟล์ PDF" title="เปิดไฟล์ PDF"><span class="file-icon" aria-hidden="true"></span></button></td>
@@ -1368,11 +1420,11 @@
           <div class="doc-meta">
             <span>หมายเลขเอกสาร: <strong>${escapeHtml(record.invoice_number)}</strong></span>
             <span>วันที่ออกเอกสาร: <strong>${escapeHtml(formatDisplayDate(record.document_date))}</strong></span>
-            <span>ประเภทเอกสาร: <strong>${escapeHtml(record.document_type)}</strong></span>
+            <span>ประเภทเอกสาร: <strong>${escapeHtml(getDisplayDocumentType(record))}</strong></span>
             <span>สถานะ: ${renderDocumentStatusBadge(record.document_status, record.document_status_raw)}</span>
           </div>
           <div class="actions">
-            ${canCreateReceipt(record) ? `<a class="action-link receipt" href="${getCreateReceiptUrl(record.id)}">สร้างใบกำกับภาษี</a>` : ""}
+            ${canCreateReceipt(record) ? `<a class="action-link receipt" href="${getCreateReceiptUrl(record.id)}">${escapeHtml(getCreateReceiptActionLabel())}</a>` : ""}
             <button class="action-button file-button" type="button" data-file-id="${escapeHtml(record.id)}" aria-label="เปิดไฟล์ PDF" title="เปิดไฟล์ PDF"><span class="file-icon" aria-hidden="true"></span></button>
             <a class="action-link" href="${getEditUrl(record.id)}">แก้ไข</a>
             <button class="action-button delete" type="button" data-delete-id="${escapeHtml(record.id)}">ลบ</button>
@@ -1523,6 +1575,7 @@
     }
 
     async function renderDocuments() {
+      updateCompanyActions();
       try {
         statusMessage.textContent = "กำลังโหลดเอกสาร...";
         let issuedToday = [];
@@ -1534,7 +1587,7 @@
         await loadInvoiceRecords();
         statusMessage.textContent = dashboardNotice || (
           issuedToday.length > 0
-            ? `ออกใบกำกับภาษีตามกำหนดแล้ว ${issuedToday.length} รายการ`
+            ? `ออก${selectedCompanyCode === "YDH" ? "ใบเสร็จรับเงิน" : "ใบกำกับภาษี"}ตามกำหนดแล้ว ${issuedToday.length} รายการ`
             : ""
         );
         if (dashboardNotice) {
@@ -1643,6 +1696,17 @@
     folderSizeButtons.forEach((button) => {
       button.addEventListener("click", () => {
         applyFolderSize(button.dataset.folderSize);
+      });
+    });
+
+    companyButtons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        selectedCompanyCode = normalizeCompanyCode(button.dataset.companyCode);
+        localStorage.setItem(COMPANY_STORAGE_KEY, selectedCompanyCode);
+        selectedRecordId = "";
+        paginationState.page = 1;
+        updateCompanyActions();
+        renderDocuments();
       });
     });
 

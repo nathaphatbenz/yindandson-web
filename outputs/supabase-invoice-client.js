@@ -12,6 +12,70 @@ const supabaseClient = isSupabaseConfigured
 
 const INVOICE_TABLE = "invoices";
 const USED_DOCUMENT_STATUSES = ["issued", "reserved", "cancelled"];
+const DEFAULT_COMPANY_CODE = "YDS";
+const COMPANY_CONFIGS = {
+  YDS: {
+    code: "YDS",
+    name: "บริษัท ยินดีแอนด์ซันส์ จำกัด",
+    displayName: "YinD & Sons",
+    addressLines: [
+      "สำนักงานใหญ่ 155/101 หมู่ที่ 10 ตำบลสุรศักดิ์ อำเภอศรีราชา จังหวัดชลบุรี 20110"
+    ],
+    phone: "โทร 081-4529760",
+    taxIdLine: "เลขประจำตัวผู้เสียภาษีอากร&nbsp;&nbsp;0 2055 60022 22 3",
+    signatureName: "ในนาม บริษัท ยินดีแอนด์ซันส์ จำกัด",
+    englishName: "Yindee and Sons Co., Ltd.",
+    englishAddressLines: [
+      "Head Office 155/101 Moo 10, Surasak Subdistrict, Si Racha District, Chonburi 20110"
+    ],
+    englishPhone: "Tel. 081-4529760",
+    englishTaxIdLine: "Tax ID&nbsp;&nbsp;0 2055 60022 22 3",
+    englishSignatureName: "For Yindee and Sons Co., Ltd.",
+    logo: "",
+    useVat: true
+  },
+  YDH: {
+    code: "YDH",
+    name: "YinD House",
+    displayName: "YinD House",
+    addressLines: [
+      "99/1 ม.1 ต.สุรศักดิ์",
+      "อ.ศรีราชา",
+      "จ.ชลบุรี 20110"
+    ],
+    phone: "โทร 081-6395599",
+    taxIdLine: "",
+    signatureName: "ในนาม YinD House",
+    englishName: "YinD House",
+    englishAddressLines: [
+      "99/1 Moo 1, Surasak Subdistrict",
+      "Si Racha District",
+      "Chonburi 20110"
+    ],
+    englishPhone: "Tel. 081-6395599",
+    englishTaxIdLine: "",
+    englishSignatureName: "For YinD House",
+    logo: "yind-house-logo.jpg",
+    useVat: false
+  }
+};
+
+function normalizeCompanyCode(companyCode) {
+  const code = String(companyCode || DEFAULT_COMPANY_CODE).trim().toUpperCase();
+  return COMPANY_CONFIGS[code] ? code : DEFAULT_COMPANY_CODE;
+}
+
+function getCompanyConfig(companyCode) {
+  return COMPANY_CONFIGS[normalizeCompanyCode(companyCode)];
+}
+
+function getRecordCompanyCode(record) {
+  return normalizeCompanyCode(record?.company_code || record?.companyCode);
+}
+
+function companyUsesVat(companyCode) {
+  return getCompanyConfig(companyCode).useVat !== false;
+}
 
 function requireSupabaseClient() {
   if (!supabaseClient) {
@@ -61,6 +125,8 @@ function mapDbInvoice(record) {
     document_year: record.document_year,
     document_status: record.document_status || "issued",
     document_status_raw: record.document_status ?? null,
+    company_code: getRecordCompanyCode(record),
+    companyCode: getRecordCompanyCode(record),
     source_invoice_id: record.source_invoice_id,
     customer_address: record.customer_address,
     tax_id: record.tax_id,
@@ -82,6 +148,7 @@ function mapInvoicePayload(record) {
     document_group: record.document_group,
     document_year: record.document_year,
     document_status: record.document_status || "issued",
+    company_code: getRecordCompanyCode(record),
     source_invoice_id: record.source_invoice_id || null,
     customer_address: record.customer_address,
     tax_id: record.tax_id,
@@ -97,13 +164,14 @@ function removeDocumentNumberMetadata(payload) {
   delete cleanPayload.document_group;
   delete cleanPayload.document_year;
   delete cleanPayload.document_status;
+  delete cleanPayload.company_code;
   return cleanPayload;
 }
 
 function isMissingDocumentMetadataError(error) {
   return error && (
     error.code === "PGRST204"
-    || /document_group|document_year|document_status/i.test(error.message || "")
+    || /document_group|document_year|document_status|company_code/i.test(error.message || "")
   );
 }
 
@@ -134,13 +202,15 @@ function inferDocumentYearFromRecord(record) {
   return new Date().getFullYear() + 543;
 }
 
-async function fetchInvoices({ keyword = "", page = 1, pageSize = 20 } = {}) {
+async function fetchInvoices({ keyword = "", page = 1, pageSize = 20, companyCode = DEFAULT_COMPANY_CODE } = {}) {
   const client = requireSupabaseClient();
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
+  const normalizedCompanyCode = normalizeCompanyCode(companyCode);
   let query = client
     .from(INVOICE_TABLE)
-    .select("id, customer_name, invoice_number, document_date, document_type, document_group, document_status, source_invoice_id, created_at", { count: "exact" })
+    .select("id, customer_name, invoice_number, document_date, document_type, document_group, document_status, company_code, source_invoice_id, created_at", { count: "exact" })
+    .eq("company_code", normalizedCompanyCode)
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -149,7 +219,24 @@ async function fetchInvoices({ keyword = "", page = 1, pageSize = 20 } = {}) {
     query = query.or(`customer_name.ilike.%${safeKeyword}%,invoice_number.ilike.%${safeKeyword}%`);
   }
 
-  const { data, error, count } = await query;
+  let { data, error, count } = await query;
+  if (isMissingDocumentMetadataError(error)) {
+    let fallbackQuery = client
+      .from(INVOICE_TABLE)
+      .select("id, customer_name, invoice_number, document_date, document_type, document_group, document_status, source_invoice_id, created_at", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (keyword.trim()) {
+      const safeKeyword = keyword.trim().replaceAll("%", "\\%").replaceAll("_", "\\_");
+      fallbackQuery = fallbackQuery.or(`customer_name.ilike.%${safeKeyword}%,invoice_number.ilike.%${safeKeyword}%`);
+    }
+
+    const fallbackResult = await fallbackQuery;
+    data = fallbackResult.data;
+    error = fallbackResult.error;
+    count = fallbackResult.count;
+  }
   if (error) {
     throw error;
   }
@@ -160,13 +247,25 @@ async function fetchInvoices({ keyword = "", page = 1, pageSize = 20 } = {}) {
   };
 }
 
-async function fetchCustomerDirectory() {
+async function fetchCustomerDirectory(companyCode = DEFAULT_COMPANY_CODE) {
   const client = requireSupabaseClient();
-  const { data, error } = await client
+  const normalizedCompanyCode = normalizeCompanyCode(companyCode);
+  let { data, error } = await client
     .from(INVOICE_TABLE)
-    .select("customer_name, customer_address, tax_id, created_at")
+    .select("customer_name, customer_address, tax_id, company_code, created_at")
+    .eq("company_code", normalizedCompanyCode)
     .not("customer_name", "is", null)
     .order("created_at", { ascending: false });
+
+  if (isMissingDocumentMetadataError(error)) {
+    const fallbackResult = await client
+      .from(INVOICE_TABLE)
+      .select("customer_name, customer_address, tax_id, created_at")
+      .not("customer_name", "is", null)
+      .order("created_at", { ascending: false });
+    data = fallbackResult.data;
+    error = fallbackResult.error;
+  }
 
   if (error) {
     throw error;
@@ -304,11 +403,13 @@ async function hasLinkedReceiptDocument(sourceInvoiceId) {
   );
 }
 
-async function fetchUsedDocumentNumbers(documentGroup, year) {
+async function fetchUsedDocumentNumbers(documentGroup, year, companyCode = DEFAULT_COMPANY_CODE) {
   const client = requireSupabaseClient();
+  const normalizedCompanyCode = normalizeCompanyCode(companyCode);
   const metadataQuery = client
     .from(INVOICE_TABLE)
-    .select("invoice_number, document_date, document_type, document_group, document_year, document_status");
+    .select("invoice_number, document_date, document_type, document_group, document_year, document_status, company_code")
+    .eq("company_code", normalizedCompanyCode);
 
   const metadataResult = await metadataQuery;
   if (!metadataResult.error) {
@@ -339,11 +440,13 @@ async function fetchUsedDocumentNumbers(documentGroup, year) {
       .filter(Boolean);
 }
 
-async function fetchIssuedDocumentNumbers(documentGroup, year) {
+async function fetchIssuedDocumentNumbers(documentGroup, year, companyCode = DEFAULT_COMPANY_CODE) {
   const client = requireSupabaseClient();
+  const normalizedCompanyCode = normalizeCompanyCode(companyCode);
   const metadataResult = await client
     .from(INVOICE_TABLE)
-    .select("invoice_number, document_date, document_type, document_group, document_year, document_status");
+    .select("invoice_number, document_date, document_type, document_group, document_year, document_status, company_code")
+    .eq("company_code", normalizedCompanyCode);
 
   if (!metadataResult.error) {
     return (metadataResult.data || [])
@@ -373,17 +476,22 @@ async function fetchIssuedDocumentNumbers(documentGroup, year) {
     .filter(Boolean);
 }
 
-async function fetchLatestReceiptNumbersByStatus(year) {
+async function fetchLatestReceiptNumbersByStatus(year, companyCode = DEFAULT_COMPANY_CODE) {
   const client = requireSupabaseClient();
-  const getLatestNumber = async (status) => {
-    const { data, error } = await client
+  const normalizedCompanyCode = normalizeCompanyCode(companyCode);
+  const getLatestNumber = async (status, includeCompanyFilter = true) => {
+    let query = client
       .from(INVOICE_TABLE)
       .select("invoice_number, document_date")
       .eq("document_group", "RE")
       .eq("document_year", year)
-      .eq("document_status", status)
-      .order("invoice_number", { ascending: false })
-      .limit(1);
+      .eq("document_status", status);
+
+    if (includeCompanyFilter) {
+      query = query.eq("company_code", normalizedCompanyCode);
+    }
+
+    const { data, error } = await query.order("invoice_number", { ascending: false }).limit(1);
 
     if (error) {
       throw error;
@@ -392,7 +500,17 @@ async function fetchLatestReceiptNumbersByStatus(year) {
     return data?.[0] || null;
   };
 
-  const [issued, reserved] = await Promise.all([getLatestNumber("issued"), getLatestNumber("reserved")]);
+  let issued = null;
+  let reserved = null;
+  try {
+    [issued, reserved] = await Promise.all([getLatestNumber("issued"), getLatestNumber("reserved")]);
+  } catch (error) {
+    if (!isMissingDocumentMetadataError(error)) {
+      throw error;
+    }
+    [issued, reserved] = await Promise.all([getLatestNumber("issued", false), getLatestNumber("reserved", false)]);
+  }
+
   return {
     issued: issued?.invoice_number || "",
     reserved: reserved?.invoice_number || "",
@@ -400,12 +518,14 @@ async function fetchLatestReceiptNumbersByStatus(year) {
   };
 }
 
-async function isDocumentNumberAvailable(documentNumber, excludeId = "") {
+async function isDocumentNumberAvailable(documentNumber, excludeId = "", companyCode = DEFAULT_COMPANY_CODE) {
   const client = requireSupabaseClient();
+  const normalizedCompanyCode = normalizeCompanyCode(companyCode);
   let query = client
     .from(INVOICE_TABLE)
     .select("id")
     .eq("invoice_number", documentNumber)
+    .eq("company_code", normalizedCompanyCode)
     .limit(1);
 
   if (excludeId) {
@@ -414,6 +534,24 @@ async function isDocumentNumberAvailable(documentNumber, excludeId = "") {
 
   const { data, error } = await query;
   if (error) {
+    if (isMissingDocumentMetadataError(error)) {
+      let fallbackQuery = client
+        .from(INVOICE_TABLE)
+        .select("id")
+        .eq("invoice_number", documentNumber)
+        .limit(1);
+
+      if (excludeId) {
+        fallbackQuery = fallbackQuery.neq("id", excludeId);
+      }
+
+      const fallbackResult = await fallbackQuery;
+      if (fallbackResult.error) {
+        throw fallbackResult.error;
+      }
+
+      return !fallbackResult.data || fallbackResult.data.length === 0;
+    }
     throw error;
   }
 
