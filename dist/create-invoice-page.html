@@ -2079,9 +2079,9 @@
       // this uses the minimum readable table font rather than scaling the whole page.
       const fillerHeightMm = (() => {
         if (printableRowCount >= 18) return 0;
-        if (printableRowCount >= 15) return Math.max(0, 8 - (printableRowCount - 15) * 3);
-        if (printableRowCount >= 11) return Math.max(10, 40 - (printableRowCount - 11) * 7);
-        return Math.max(24, 60 - printableRowCount * 3.5);
+        if (printableRowCount >= 15) return Math.max(0, 6 - (printableRowCount - 15) * 2);
+        if (printableRowCount >= 11) return Math.max(8, 28 - (printableRowCount - 11) * 5);
+        return Math.max(18, 42 - printableRowCount * 2.8);
       })();
       const referenceRow = isReceiptDocument(data.documentType)
         ? `
@@ -2201,20 +2201,22 @@
     }
     .sheet {
       width: 202mm;
-      min-height: 289mm;
+      height: 289mm;
       margin: 0 auto;
       padding: var(--pdf-page-padding);
       background: #fff;
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-rows: auto auto auto minmax(0, 1fr) auto;
       break-inside: avoid;
       page-break-inside: avoid;
+      overflow: hidden;
     }
     .print-document {
       --pdf-print-width: 202mm;
       --pdf-print-height: 289mm;
       width: var(--pdf-print-width);
-      min-height: var(--pdf-print-height);
+      height: var(--pdf-print-height);
+      max-height: var(--pdf-print-height);
     }
     .top-note { text-align: right; font-size: var(--pdf-top-note-font); font-weight: 700; margin-bottom: var(--pdf-top-note-margin); }
     .header {
@@ -2324,8 +2326,9 @@
     }
     .items {
       border: var(--pdf-table-border);
-      flex: 1 1 auto;
+      height: 100%;
       min-height: 0;
+      overflow: hidden;
     }
     .print-items-table {
       break-inside: avoid;
@@ -2577,7 +2580,6 @@
     .words .text { text-align: center; font-weight: 700; line-height: 1.25; }
     .print-footer {
       margin-top: 0;
-      flex: 0 0 auto;
       break-inside: avoid;
       page-break-inside: avoid;
     }
@@ -2621,30 +2623,35 @@
       font-size: var(--pdf-signature-quotation-font);
       padding-top: 5px;
     }
+    .print-header,
+    .print-customer,
+    .print-summary,
+    .print-signature {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
     @media print {
       html,
       body {
         width: 202mm;
         height: 289mm;
-        min-height: 289mm;
-        overflow: visible;
+        min-height: 0;
+        overflow: hidden;
       }
       .sheet {
         width: 202mm;
         height: 289mm;
-        min-height: 289mm;
         max-height: 289mm;
         margin: 0;
-        padding: 0;
-        overflow: visible;
+        padding: var(--pdf-page-padding);
+        overflow: hidden;
       }
       .print-document {
         width: 202mm;
         height: 289mm;
-        min-height: 289mm;
         max-height: 289mm;
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-rows: auto auto auto minmax(0, 1fr) auto;
         break-after: avoid;
         page-break-after: avoid;
       }
@@ -2662,7 +2669,7 @@
 <body>
   <div class="sheet print-document ${fitClass}">
     <div class="top-note">${labels.original}</div>
-    <div class="header">
+    <div class="header print-header">
       <div>
         <div class="brand">
           <div class="logo">${companyLogoHtml}</div>
@@ -2676,7 +2683,7 @@
       </div>
       <div class="doc-title">${escapeHtml(documentTitle)}</div>
     </div>
-    <div class="info-grid">
+    <div class="info-grid print-customer">
       <div class="box customer-box">
         <div class="customer-row"><strong>${labels.customerName}</strong><div>${escapeHtml(data.customerCompany)}</div></div>
         <div class="customer-row"><strong>${labels.customerAddress}</strong><div>${escapeHtml(data.customerAddress).replaceAll("\n", "<br>")}</div></div>
@@ -2687,7 +2694,7 @@
         <div class="doc-row"><strong>${labels.documentDate}</strong><div class="doc-date">${escapeHtml(displayDocumentDate)}</div></div>
       </div>
     </div>
-    <table class="items print-items-table">
+    <table class="items print-items print-items-table">
       <colgroup>
         <col class="w-index">
         <col class="w-description">
@@ -2706,8 +2713,8 @@
       </thead>
       <tbody>${rows}</tbody>
     </table>
-    <div class="print-footer">
-      <table class="bottom-table">
+    <div class="print-footer print-signature">
+      <table class="bottom-table print-summary">
         <colgroup>
           <col class="w-index">
           <col class="w-description">
