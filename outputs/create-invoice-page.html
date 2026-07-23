@@ -2063,6 +2063,9 @@
         : `<span>${escapeHtml(companyConfig.code)}</span>`;
       const documentTitle = data.documentTitle || getPdfDocumentTitle(data.documentType, language);
       const fileTitle = getPdfFileTitle(data.documentNumber, language);
+      const displayDocumentNumber = companyConfig.code === "YDH"
+        ? getReservedDocumentSuffix(data.documentNumber) || data.documentNumber
+        : data.documentNumber;
       const printableRowCount = data.items.length + (isReceiptDocument(data.documentType) ? 1 : 0);
       const fitClass = printableRowCount >= 18
         ? "pdf-fit-ultra"
@@ -2118,13 +2121,11 @@
         ? (language === "en"
           ? [
               "Goods/services listed above have been received correctly.",
-              "YinD House will issue a receipt after payment is completed.",
-              "Please make payment payable to YinD House only."
+              "YinD House will issue a receipt after payment is completed."
             ]
           : [
               "ได้รับสินค้าตามรายการข้างบนนี้ถูกต้องแล้ว",
-              "YinD House จะออกใบเสร็จรับเงิน เมื่อมีการชำระเงินเรียบร้อยแล้ว",
-              "โปรดสั่งจ่ายในนาม YinD House เท่านั้น"
+              "YinD House จะออกใบเสร็จรับเงิน เมื่อมีการชำระเงินเรียบร้อยแล้ว"
             ])
         : labels.billingNotes;
       const paymentContent = isBillingLikeDocument
@@ -2679,7 +2680,7 @@
         <div class="customer-row"><strong>${labels.taxId}</strong><div>${escapeHtml(data.taxId)}</div></div>
       </div>
       <div class="box doc-box">
-        <div class="doc-row"><strong>${labels.documentNo}</strong><div class="doc-number">${escapeHtml(data.documentNumber)}</div></div>
+        <div class="doc-row"><strong>${labels.documentNo}</strong><div class="doc-number">${escapeHtml(displayDocumentNumber)}</div></div>
         <div class="doc-row"><strong>${labels.documentDate}</strong><div>${escapeHtml(data.dateText)}</div></div>
       </div>
     </div>
