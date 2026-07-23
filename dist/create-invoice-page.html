@@ -2066,6 +2066,7 @@
       const displayDocumentNumber = companyConfig.code === "YDH"
         ? getReservedDocumentSuffix(data.documentNumber) || data.documentNumber
         : data.documentNumber;
+      const displayDocumentDate = String(data.dateText || "").replace(/\s*\/\s*/g, "/");
       const printableRowCount = data.items.length + (isReceiptDocument(data.documentType) ? 1 : 0);
       const fitClass = printableRowCount >= 18
         ? "pdf-fit-ultra"
@@ -2291,10 +2292,10 @@
     .doc-box { display: grid; grid-template-rows: 1fr 1fr; }
     .doc-row {
       display: grid;
-      grid-template-columns: 23mm minmax(0, 1fr);
+      grid-template-columns: 18mm minmax(0, 1fr);
       align-items: center;
       padding: 0 var(--pdf-doc-row-padding-x);
-      gap: 2mm;
+      gap: 1mm;
       font-size: var(--pdf-doc-row-font);
     }
     .doc-row strong {
@@ -2305,15 +2306,16 @@
     .doc-row div {
       min-width: 0;
       text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: normal;
+      overflow: visible;
+      overflow-wrap: anywhere;
       font-size: var(--pdf-doc-value-font);
       font-weight: 800;
-      line-height: 1;
+      line-height: 1.08;
       font-variant-numeric: tabular-nums;
     }
     .doc-number { font-size: var(--pdf-doc-number-font); font-weight: 800; }
+    .doc-date { white-space: nowrap; font-size: var(--pdf-doc-date-font); }
     table {
       width: 100%;
       border-collapse: separate;
@@ -2414,11 +2416,12 @@
       --pdf-customer-font: 14px;
       --pdf-customer-label-font: 12.5px;
       --pdf-customer-line: 1.04;
-      --pdf-doc-row-padding-x: 5mm;
+      --pdf-doc-row-padding-x: 2.4mm;
       --pdf-doc-row-font: 14px;
       --pdf-doc-row-label-font: 12.5px;
       --pdf-doc-value-font: 14.5px;
       --pdf-doc-number-font: 15px;
+      --pdf-doc-date-font: 13px;
       --pdf-cell-padding: 2.5px 3px;
       --pdf-head-padding: 1.8px 2.4px;
       --pdf-head-font: 13px;
@@ -2681,7 +2684,7 @@
       </div>
       <div class="box doc-box">
         <div class="doc-row"><strong>${labels.documentNo}</strong><div class="doc-number">${escapeHtml(displayDocumentNumber)}</div></div>
-        <div class="doc-row"><strong>${labels.documentDate}</strong><div>${escapeHtml(data.dateText)}</div></div>
+        <div class="doc-row"><strong>${labels.documentDate}</strong><div class="doc-date">${escapeHtml(displayDocumentDate)}</div></div>
       </div>
     </div>
     <table class="items print-items-table">
