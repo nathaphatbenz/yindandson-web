@@ -1025,7 +1025,7 @@
         <div class="table-wrap">
           <div class="section-head">
             <div>
-              <h2>รายการทำงาน <span class="required">*</span></h2>
+              <h2>รายการทำงาน<span class="required">*</span></h2>
               <p>เพิ่มรายการงาน ราคา/หน่วย และจำนวนเที่ยว</p>
             </div>
             <button class="primary" type="button" id="addRowBtn">
@@ -1130,9 +1130,11 @@
           <div class="pdf-note-text" id="summaryNotePdf"></div>
         </div>
         <div class="grand-total">
-          <span>รายการทำงาน เป็นจำนวนเงิน</span>
+          <span>รายการทำงาน</span>
           <strong id="grandTotal">฿0.00</strong>
           <div class="pdf-detail-list" id="workPdfDetails"></div>
+
+          
         </div>
         <div class="grand-total expense-total-box">
           <span>รายการค่าใช้จ่าย เป็นจำนวนเงิน</span>
@@ -1517,6 +1519,20 @@
             font-size: 22px;
             font-weight: 800;
           }
+
+	.pdf-sum {
+            display: flex;
+            justify-content: space-between;
+
+
+            padding: 14px 0 8px;
+
+            font-size: 22px;
+            font-weight: 800;
+	        color: red;
+          }
+
+
           .pdf-row {
             display: flex;
             justify-content: space-between;
@@ -1547,15 +1563,27 @@
           <span>ทะเบียน ${escapeHtml(record.registration || "-")}</span>
         </div>
         <div class="pdf-title">
-          <span>รายการทำงาน เป็นจำนวนเงิน</span>
-          <span>${formatter.format(Number(record.work_total || 0))}</span>
+          <span>รายการทำงาน</span>
         </div>
         ${workRows}
+	<div class="pdf-sum">
+		<span>รวมเป็นเงิน</span>
+		<span>${formatter.format(Number(record.work_total || 0))}</span>
+ 	</div>
+
         <div class="pdf-title">
-          <span>รายการค่าใช้จ่าย เป็นจำนวนเงิน</span>
-          <span>${formatter.format(Number(record.expense_total || 0))}</span>
+          <span>รายการค่าใช้จ่าย</span>
         </div>
         ${expenseRows}
+	<div class="pdf-sum">
+		<span>รวมเป็นเงิน</span>
+		<span>${formatter.format(Number(record.expense_total || 0))}</span>
+ 	</div>
+
+
+
+
+
         <div class="pdf-net">
           <span>ยอดสุทธิหลังหักค่าใช้จ่ายเหลือ</span>
           <span>${formatter.format(Number(record.net_total || 0))}</span>
@@ -1927,7 +1955,6 @@
         saveRecordPdf(savePdfButton.dataset.id);
       }
     });
-
     itemsBody.addEventListener("input", updateTotals);
     summaryNote.addEventListener("input", updateTotals);
     itemsBody.addEventListener("click", (event) => {
