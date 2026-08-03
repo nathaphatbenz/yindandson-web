@@ -1025,7 +1025,7 @@
         <div class="table-wrap">
           <div class="section-head">
             <div>
-              <h2>รายการทำงาน <span class="required">*</span></h2>
+              <h2>เป<span class="required">*</span></h2>
               <p>เพิ่มรายการงาน ราคา/หน่วย และจำนวนเที่ยว</p>
             </div>
             <button class="primary" type="button" id="addRowBtn">
@@ -1130,9 +1130,11 @@
           <div class="pdf-note-text" id="summaryNotePdf"></div>
         </div>
         <div class="grand-total">
+          <span>รายการทำงาน</span>
+          
+          <div class="pdf-detail-list" id="workPdfDetails"></div>
           <span>รายการทำงาน เป็นจำนวนเงิน</span>
           <strong id="grandTotal">฿0.00</strong>
-          <div class="pdf-detail-list" id="workPdfDetails"></div>
         </div>
         <div class="grand-total expense-total-box">
           <span>รายการค่าใช้จ่าย เป็นจำนวนเงิน</span>
@@ -1927,7 +1929,6 @@
         saveRecordPdf(savePdfButton.dataset.id);
       }
     });
-
     itemsBody.addEventListener("input", updateTotals);
     summaryNote.addEventListener("input", updateTotals);
     itemsBody.addEventListener("click", (event) => {
