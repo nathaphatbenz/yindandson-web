@@ -718,9 +718,32 @@
       font-size: 0.9rem;
     }
 
-    .pagination-actions { display: inline-flex; gap: 8px; }
-    .pagination-button { min-height: 36px; padding: 6px 10px; }
+    .pagination-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .pagination-button {
+      min-width: 36px;
+      min-height: 36px;
+      padding: 6px 10px;
+    }
+    .pagination-button.active {
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 8px 18px rgba(15, 118, 110, 0.18);
+    }
     .pagination-button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .pagination-ellipsis {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 0 2px;
+      color: var(--muted);
+      font-weight: 800;
+    }
 
     .document-status-badge {
       display: inline-flex;
@@ -881,6 +904,12 @@
 
       .pagination-shell {
         justify-content: center;
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .pagination-actions {
+        justify-content: flex-start;
       }
     }
   </style>
@@ -987,8 +1016,8 @@
         </div>
 
         <div class="mobile-list" id="mobileList"></div>
-        <div class="pagination-shell" id="paginationInfo"></div>
       </div>
+      <div class="pagination-shell" id="paginationInfo"></div>
     </section>
   </main>
 
@@ -1651,10 +1680,26 @@
       const first = total ? ((paginationState.page - 1) * pageSize) + 1 : 0;
       const last = Math.min(paginationState.page * pageSize, total);
       const lastPage = Math.max(1, Math.ceil(total / pageSize));
+      const pageNumbers = getVisiblePageNumbers(paginationState.page, lastPage);
+      const pageButtons = pageNumbers.map((pageNumber) => {
+        if (pageNumber === "...") {
+          return `<span class="pagination-ellipsis" aria-hidden="true">...</span>`;
+        }
+
+        return `
+          <button
+            class="button secondary pagination-button ${pageNumber === paginationState.page ? "active" : ""}"
+            type="button"
+            data-page-number="${pageNumber}"
+            ${pageNumber === paginationState.page ? "aria-current=\"page\"" : ""}
+          >${pageNumber}</button>
+        `;
+      }).join("");
       paginationInfo.innerHTML = `
         <span>แสดง ${first}-${last} จากทั้งหมด ${total} รายการ</span>
         <span class="pagination-actions">
           <button class="button secondary pagination-button" type="button" id="previousPageButton" ${paginationState.page === 1 ? "disabled" : ""}>ก่อนหน้า</button>
+          ${pageButtons}
           <button class="button secondary pagination-button" type="button" id="nextPageButton" ${paginationState.page >= lastPage ? "disabled" : ""}>ถัดไป</button>
         </span>`;
 
@@ -1668,6 +1713,45 @@
         selectedRecordId = "";
         renderDocuments();
       });
+      document.querySelectorAll("[data-page-number]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const nextPage = Number(button.dataset.pageNumber);
+          if (!Number.isFinite(nextPage) || nextPage === paginationState.page) return;
+          paginationState.page = nextPage;
+          selectedRecordId = "";
+          renderDocuments();
+        });
+      });
+    }
+
+    function getVisiblePageNumbers(currentPage, lastPage) {
+      if (lastPage <= 7) {
+        return Array.from({ length: lastPage }, (_, index) => index + 1);
+      }
+
+      const pages = new Set([1, lastPage, currentPage, currentPage - 1, currentPage + 1]);
+      if (currentPage <= 3) {
+        pages.add(2);
+        pages.add(3);
+        pages.add(4);
+      }
+      if (currentPage >= lastPage - 2) {
+        pages.add(lastPage - 1);
+        pages.add(lastPage - 2);
+        pages.add(lastPage - 3);
+      }
+
+      const sortedPages = [...pages]
+        .filter((pageNumber) => pageNumber >= 1 && pageNumber <= lastPage)
+        .sort((a, b) => a - b);
+
+      return sortedPages.reduce((result, pageNumber, index) => {
+        if (index > 0 && pageNumber - sortedPages[index - 1] > 1) {
+          result.push("...");
+        }
+        result.push(pageNumber);
+        return result;
+      }, []);
     }
 
     async function deleteRecord(id) {
