@@ -376,6 +376,62 @@
         return String(left.document_date || "").localeCompare(String(right.document_date || ""));
       });
     }
+
+    function parseReceiptNumber(receiptNumber) {
+      const match = String(receiptNumber || "").trim().match(/^(RE-\d{4}-)(\d+)(?:-(\d+))?$/i);
+      if (!match) {
+        return null;
+      }
+
+      return {
+        prefix: match[1],
+        main: Number(match[2]),
+        mainWidth: match[2].length,
+        suffix: match[3] ? Number(match[3]) : null
+      };
+    }
+
+    function formatReceiptNumber(parsedReceipt, main, suffix = null) {
+      const mainNumber = String(main).padStart(parsedReceipt.mainWidth, "0");
+      return `${parsedReceipt.prefix}${mainNumber}${suffix === null ? "" : `-${suffix}`}`;
+    }
+
+    function createCancelledGapRecord(receiptNumber) {
+      return {
+        id: `cancelled-${receiptNumber}`,
+        document_date: "",
+        receipt_number: receiptNumber,
+        invoice_number: "ยกเลิก",
+        customer_name: "ยกเลิก",
+        document_status: "cancelled",
+        isCancelledGap: true
+      };
+    }
+
+    function addCancelledReceiptGaps(records) {
+      const sortedRecords = sortReceiptReportRecords(records);
+      const completedRecords = [];
+      let previousBaseParsed = null;
+
+      sortedRecords.forEach((record) => {
+        const currentParsed = parseReceiptNumber(record.receipt_number);
+
+        if (currentParsed?.suffix === null) {
+          if (previousBaseParsed && previousBaseParsed.prefix === currentParsed.prefix && previousBaseParsed.main < currentParsed.main) {
+            for (let main = previousBaseParsed.main + 1; main < currentParsed.main; main += 1) {
+              completedRecords.push(createCancelledGapRecord(formatReceiptNumber(currentParsed, main)));
+            }
+          }
+
+          previousBaseParsed = currentParsed;
+        }
+
+        completedRecords.push(record);
+      });
+
+      return completedRecords;
+    }
+
     function renderSummary(records) {
       receiptCount.textContent = `${records.length} ใบ`;
       firstReceiptNumber.textContent = records[0]?.receipt_number || "-";
@@ -423,7 +479,7 @@
 
       try {
         actualReportRecords = sortReceiptReportRecords(await fetchReceiptReport({ year, month }));
-        reportRecords = actualReportRecords;
+        reportRecords = addCancelledReceiptGaps(actualReportRecords);
         renderSummary(actualReportRecords);
         renderRows(reportRecords);
         const hasRecords = reportRecords.length > 0;
