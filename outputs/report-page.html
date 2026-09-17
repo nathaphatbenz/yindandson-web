@@ -361,39 +361,22 @@
       yearFilter.value = String(current.year);
     }
 
-    function parseReceiptSequence(documentNumber) {
-      const match = String(documentNumber || "").match(/^(RE-\d{4}-)(\d{3,4})$/i);
-      return match ? { prefix: match[1], width: match[2].length, sequence: Number(match[2]) } : null;
+    const receiptNumberSorter = new Intl.Collator("th-TH", {
+      numeric: true,
+      sensitivity: "base"
+    });
+
+    function sortReceiptReportRecords(records) {
+      return [...records].sort((left, right) => {
+        const leftDate = String(left.document_date || "");
+        const rightDate = String(right.document_date || "");
+        if (leftDate !== rightDate) {
+          return leftDate.localeCompare(rightDate);
+        }
+
+        return receiptNumberSorter.compare(left.receipt_number || "", right.receipt_number || "");
+      });
     }
-
-    function addCancelledReceiptGaps(records) {
-      const parsedRecords = records
-        .map((record) => ({ record, parsed: parseReceiptSequence(record.receipt_number) }))
-        .filter((item) => item.parsed);
-      if (parsedRecords.length < 2) return records;
-
-      const sameSeries = parsedRecords.filter((item) => item.parsed.prefix === parsedRecords[0].parsed.prefix);
-      const numbers = new Map(sameSeries.map((item) => [item.parsed.sequence, item.record]));
-      const sequences = [...numbers.keys()].sort((a, b) => a - b);
-      const firstSequence = sequences[0];
-      const lastSequence = sequences[sequences.length - 1];
-      const { prefix, width } = sameSeries[0].parsed;
-      const completed = [];
-
-      for (let sequence = firstSequence; sequence <= lastSequence; sequence += 1) {
-        const existingRecord = numbers.get(sequence);
-        completed.push(existingRecord || {
-          document_date: "",
-          receipt_number: `${prefix}${String(sequence).padStart(width, "0")}`,
-          invoice_number: "ยกเลิก",
-          customer_name: "ยกเลิก",
-          isCancelledGap: true
-        });
-      }
-
-      return completed;
-    }
-
     function renderSummary(records) {
       receiptCount.textContent = `${records.length} ใบ`;
       firstReceiptNumber.textContent = records[0]?.receipt_number || "-";
@@ -440,8 +423,8 @@
       savePdfButton.disabled = true;
 
       try {
-        actualReportRecords = await fetchReceiptReport({ year, month });
-        reportRecords = addCancelledReceiptGaps(actualReportRecords);
+        actualReportRecords = sortReceiptReportRecords(await fetchReceiptReport({ year, month }));
+        reportRecords = actualReportRecords;
         renderSummary(actualReportRecords);
         renderRows(reportRecords);
         const hasRecords = reportRecords.length > 0;

@@ -652,6 +652,23 @@ function mapReceiptReportRecord(record, sourceNumberField = "invoice_number") {
   };
 }
 
+const receiptReportNumberSorter = new Intl.Collator("th-TH", {
+  numeric: true,
+  sensitivity: "base"
+});
+
+function sortReceiptReportRecords(records) {
+  return [...records].sort((left, right) => {
+    const leftDate = String(left.document_date || "");
+    const rightDate = String(right.document_date || "");
+    if (leftDate !== rightDate) {
+      return leftDate.localeCompare(rightDate);
+    }
+
+    return receiptReportNumberSorter.compare(left.receipt_number || "", right.receipt_number || "");
+  });
+}
+
 async function attachReportReferences(client, tableName, records, referenceIdField, documentNumberField) {
   const referenceIds = [...new Set(records.map((record) => record[referenceIdField]).filter(Boolean))];
   if (referenceIds.length === 0) {
@@ -695,7 +712,7 @@ async function fetchReceiptReport({ year, month }) {
       "reference_document_id",
       "document_number"
     );
-    return recordsWithReferences.map((record) => mapReceiptReportRecord(record, "document_number"));
+    return sortReceiptReportRecords(recordsWithReferences.map((record) => mapReceiptReportRecord(record, "document_number")));
   }
 
   if (!isMissingTableError(documentsResult.error) && !isMissingDocumentMetadataError(documentsResult.error)) {
@@ -723,7 +740,7 @@ async function fetchReceiptReport({ year, month }) {
     "source_invoice_id",
     "invoice_number"
   );
-  return recordsWithReferences.map((record) => mapReceiptReportRecord(record));
+  return sortReceiptReportRecords(recordsWithReferences.map((record) => mapReceiptReportRecord(record)));
 }
 
 function mapPendingInvoiceRecord(record, numberField) {
