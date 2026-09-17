@@ -659,13 +659,12 @@ const receiptReportNumberSorter = new Intl.Collator("th-TH", {
 
 function sortReceiptReportRecords(records) {
   return [...records].sort((left, right) => {
-    const leftDate = String(left.document_date || "");
-    const rightDate = String(right.document_date || "");
-    if (leftDate !== rightDate) {
-      return leftDate.localeCompare(rightDate);
+    const numberOrder = receiptReportNumberSorter.compare(left.receipt_number || "", right.receipt_number || "");
+    if (numberOrder !== 0) {
+      return numberOrder;
     }
 
-    return receiptReportNumberSorter.compare(left.receipt_number || "", right.receipt_number || "");
+    return String(left.document_date || "").localeCompare(String(right.document_date || ""));
   });
 }
 
