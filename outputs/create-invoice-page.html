@@ -1103,6 +1103,7 @@
     const editingInvoiceId = pageParams.get("id");
     const receiptSourceId = pageParams.get("receiptFrom");
     const printInvoiceId = pageParams.get("printId");
+    const returnToReport = pageParams.get("return") === "report";
     const requestedCompanyCode = normalizeCompanyCode(pageParams.get("company") || DEFAULT_COMPANY_CODE);
     const requestedDocumentType = pageParams.get("type");
     let currentSourceInvoiceId = "";
@@ -1664,6 +1665,20 @@
       const sourceId = editingInvoiceId || receiptSourceId;
       if (!sourceId) {
         return;
+      }
+
+      if (editingInvoiceId) {
+        try {
+          await requireYindInvoiceEditor();
+        } catch (error) {
+          statusText.textContent = error.message;
+          form.querySelectorAll("input, textarea, select, button").forEach((element) => {
+            if (element.id !== "logoutButton") {
+              element.disabled = true;
+            }
+          });
+          return;
+        }
       }
 
       try {
@@ -2855,6 +2870,14 @@
           return;
         }
         statusText.textContent = "กำลังบันทึกเอกสาร...";
+        if (editingInvoiceId && editingDocumentStatus === "issued") {
+          const documentNumber = currentDocumentNumber || "ใบกำกับภาษีนี้";
+          const confirmed = window.confirm(`เอกสาร ${documentNumber} ออกแล้ว การแก้ไขข้อมูลอาจทำให้ข้อมูลในเอกสารเดิมเปลี่ยนแปลง\n\nยืนยันการแก้ไขหรือไม่?`);
+          if (!confirmed) {
+            statusText.textContent = "ยกเลิกการแก้ไขเอกสาร";
+            return;
+          }
+        }
         const savedRecord = await saveInvoiceRecord();
         if (!editingInvoiceId) {
           try {
@@ -2877,7 +2900,7 @@
         openPdfPrintPreview();
         sessionStorage.setItem("yind_dashboard_notice", editingInvoiceId ? "บันทึกการแก้ไขเอกสารเรียบร้อย" : "บันทึกเอกสารเรียบร้อย");
         window.setTimeout(() => {
-          window.location.href = "dashboard-page.html";
+          window.location.href = returnToReport ? "report-page.html" : "dashboard-page.html";
         }, 350);
       } catch (error) {
         console.error(error);

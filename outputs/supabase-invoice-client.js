@@ -586,7 +586,18 @@ async function createInvoice(record) {
 
 async function updateInvoice(id, record) {
   const client = requireSupabaseClient();
-  const payload = mapInvoicePayload(record);
+  await requireYindInvoiceEditor();
+  const payload = {
+    customer_name: record.customer_name,
+    document_date: record.document_date,
+    document_type: record.document_type,
+    customer_address: record.customer_address,
+    tax_id: record.tax_id,
+    items: record.items || [],
+    subtotal: Number(record.subtotal || 0),
+    vat_amount: Number(record.vatAmount || record.vat_amount || 0),
+    grand_total: Number(record.grandTotal || record.grand_total || 0)
+  };
   let { data, error } = await client
     .from(INVOICE_TABLE)
     .update(payload)
@@ -646,6 +657,8 @@ function mapReceiptReportRecord(record, sourceNumberField = "invoice_number") {
     id: record.id,
     document_date: record.document_date,
     receipt_number: record.document_number || record.invoice_number || "",
+    document_type: record.document_type || "",
+    company_code: getRecordCompanyCode(record),
     invoice_number: reference?.document_number || reference?.invoice_number || record.reference_invoice_number || "-",
     customer_name: record.customer_name || "-",
     document_status: String(record.document_status || "issued").toLowerCase()
@@ -695,7 +708,7 @@ async function fetchReceiptReport({ year, month }) {
   const range = getReportMonthRange(year, month);
   const documentsResult = await client
     .from("documents")
-    .select("id, document_date, document_number, customer_name, document_status, reference_document_id")
+    .select("id, document_date, document_number, document_type, customer_name, document_status, company_code, reference_document_id")
     .eq("document_group", "RE")
     .eq("company_code", DEFAULT_COMPANY_CODE)
     .gte("document_date", range.start)
@@ -720,7 +733,7 @@ async function fetchReceiptReport({ year, month }) {
 
   const invoicesResult = await client
     .from(INVOICE_TABLE)
-    .select("id, document_date, invoice_number, customer_name, document_status, source_invoice_id")
+    .select("id, document_date, invoice_number, document_type, customer_name, document_status, company_code, source_invoice_id")
     .eq("document_group", "RE")
     .eq("company_code", DEFAULT_COMPANY_CODE)
     .gte("document_date", range.start)
