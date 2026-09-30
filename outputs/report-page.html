@@ -234,7 +234,7 @@
           <summary class="button ghost"><i data-lucide="more-horizontal" aria-hidden="true"></i>เพิ่มเติม</summary>
           <div class="menu-panel">
             <a class="menu-item" href="dashboard-page.html"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
-            <a class="menu-item" href="report-page.html" aria-current="page" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
+            <a class="menu-item" href="report-page.html" aria-current="page"><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
             <a class="menu-item" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
             <a class="menu-item" href="monthly-summary-page.html" data-hide-yodsapong hidden><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>สรุปรายเดือน</a>
             <a class="menu-item" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
@@ -603,7 +603,7 @@
     savePdfButton.addEventListener("click", savePdf);
 
     async function initializeReport() {
-      canEditInvoices = await getYindAuthenticatedUsername() === "yodsapong";
+      canEditInvoices = ["yodsapong", "ntpbenz"].includes(await getYindAuthenticatedUsername());
       renderSelectOptions();
       await loadReport();
     }

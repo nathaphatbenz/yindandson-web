@@ -805,7 +805,7 @@
 
       <nav class="page-nav" aria-label="เมนูหลัก">
         <a class="nav-link" href="dashboard-page.html"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
-        <a class="nav-link" href="report-page.html" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
+        <a class="nav-link" href="report-page.html"><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
         <a class="nav-link" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
         <a class="nav-link" href="monthly-summary-page.html" data-hide-yodsapong hidden><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>สรุปรายเดือน</a>
         <a class="nav-link" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
@@ -1665,20 +1665,6 @@
       const sourceId = editingInvoiceId || receiptSourceId;
       if (!sourceId) {
         return;
-      }
-
-      if (editingInvoiceId) {
-        try {
-          await requireYindInvoiceEditor();
-        } catch (error) {
-          statusText.textContent = error.message;
-          form.querySelectorAll("input, textarea, select, button").forEach((element) => {
-            if (element.id !== "logoutButton") {
-              element.disabled = true;
-            }
-          });
-          return;
-        }
       }
 
       try {
