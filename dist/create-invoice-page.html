@@ -805,7 +805,7 @@
 
       <nav class="page-nav" aria-label="เมนูหลัก">
         <a class="nav-link" href="dashboard-page.html"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
-        <a class="nav-link" href="report-page.html" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
+        <a class="nav-link" href="report-page.html"><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
         <a class="nav-link" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
         <a class="nav-link" href="monthly-summary-page.html" data-hide-yodsapong hidden><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>สรุปรายเดือน</a>
         <a class="nav-link" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
@@ -1103,6 +1103,7 @@
     const editingInvoiceId = pageParams.get("id");
     const receiptSourceId = pageParams.get("receiptFrom");
     const printInvoiceId = pageParams.get("printId");
+    const returnToReport = pageParams.get("return") === "report";
     const requestedCompanyCode = normalizeCompanyCode(pageParams.get("company") || DEFAULT_COMPANY_CODE);
     const requestedDocumentType = pageParams.get("type");
     let currentSourceInvoiceId = "";
@@ -2855,6 +2856,14 @@
           return;
         }
         statusText.textContent = "กำลังบันทึกเอกสาร...";
+        if (editingInvoiceId && editingDocumentStatus === "issued") {
+          const documentNumber = currentDocumentNumber || "ใบกำกับภาษีนี้";
+          const confirmed = window.confirm(`เอกสาร ${documentNumber} ออกแล้ว การแก้ไขข้อมูลอาจทำให้ข้อมูลในเอกสารเดิมเปลี่ยนแปลง\n\nยืนยันการแก้ไขหรือไม่?`);
+          if (!confirmed) {
+            statusText.textContent = "ยกเลิกการแก้ไขเอกสาร";
+            return;
+          }
+        }
         const savedRecord = await saveInvoiceRecord();
         if (!editingInvoiceId) {
           try {
@@ -2877,7 +2886,7 @@
         openPdfPrintPreview();
         sessionStorage.setItem("yind_dashboard_notice", editingInvoiceId ? "บันทึกการแก้ไขเอกสารเรียบร้อย" : "บันทึกเอกสารเรียบร้อย");
         window.setTimeout(() => {
-          window.location.href = "dashboard-page.html";
+          window.location.href = returnToReport ? "report-page.html" : "dashboard-page.html";
         }, 350);
       } catch (error) {
         console.error(error);

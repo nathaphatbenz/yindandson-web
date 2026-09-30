@@ -150,6 +150,9 @@
 
     .table-heading { justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid var(--line); }
     .table-heading p { margin: 3px 0 0; color: var(--muted); font-size: 0.9rem; }
+    .report-action { display: inline-flex; align-items: center; justify-content: center; min-height: 34px; gap: 6px; border: 1px solid #b8e2d8; border-radius: 7px; padding: 6px 9px; color: #067647; background: #ecfdf3; font: inherit; font-size: .8rem; font-weight: 800; text-decoration: none; white-space: nowrap; }
+    .report-action:hover { background: #d1fae5; }
+    .report-action svg { width: 15px; height: 15px; }
     .status { min-height: 22px; margin: 12px 0 0; color: var(--primary); font-weight: 700; }
     .table-wrap { overflow-x: auto; }
     table { width: 100%; min-width: 940px; border-collapse: collapse; }
@@ -231,7 +234,7 @@
           <summary class="button ghost"><i data-lucide="more-horizontal" aria-hidden="true"></i>เพิ่มเติม</summary>
           <div class="menu-panel">
             <a class="menu-item" href="dashboard-page.html"><i data-lucide="layout-dashboard" aria-hidden="true"></i>แดชบอร์ด</a>
-            <a class="menu-item" href="report-page.html" aria-current="page" data-hide-yodsapong hidden><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
+            <a class="menu-item" href="report-page.html" aria-current="page"><i data-lucide="file-text" aria-hidden="true"></i>รายงาน</a>
             <a class="menu-item" href="monthly-work-page.html" data-hide-yodsapong hidden><i data-lucide="calendar-days" aria-hidden="true"></i>บันทึกงานรายเดือน</a>
             <a class="menu-item" href="monthly-summary-page.html" data-hide-yodsapong hidden><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>สรุปรายเดือน</a>
             <a class="menu-item" href="work-list-calculator.html" data-ntpbenz-only hidden><i data-lucide="clipboard-list" aria-hidden="true"></i>ใบงาน</a>
@@ -289,6 +292,7 @@
               <th>อ้างอิงใบวางบิล</th>
               <th>ชื่อบริษัท</th>
               <th>สถานะเอกสาร</th>
+              <th>จัดการ</th>
             </tr>
           </thead>
           <tbody id="reportTableBody"></tbody>
@@ -331,6 +335,7 @@
     const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
     let reportRecords = [];
     let actualReportRecords = [];
+    let canEditInvoices = false;
 
     function escapeHtml(value) {
       return String(value || "")
@@ -361,37 +366,75 @@
       yearFilter.value = String(current.year);
     }
 
-    function parseReceiptSequence(documentNumber) {
-      const match = String(documentNumber || "").match(/^(RE-\d{4}-)(\d{3,4})$/i);
-      return match ? { prefix: match[1], width: match[2].length, sequence: Number(match[2]) } : null;
+    const receiptNumberSorter = new Intl.Collator("th-TH", {
+      numeric: true,
+      sensitivity: "base"
+    });
+
+    function sortReceiptReportRecords(records) {
+      return [...records].sort((left, right) => {
+        const numberOrder = receiptNumberSorter.compare(left.receipt_number || "", right.receipt_number || "");
+        if (numberOrder !== 0) {
+          return numberOrder;
+        }
+
+        return String(left.document_date || "").localeCompare(String(right.document_date || ""));
+      });
+    }
+
+    function parseReceiptNumber(receiptNumber) {
+      const match = String(receiptNumber || "").trim().match(/^(RE-\d{4}-)(\d+)(?:-(\d+))?$/i);
+      if (!match) {
+        return null;
+      }
+
+      return {
+        prefix: match[1],
+        main: Number(match[2]),
+        mainWidth: match[2].length,
+        suffix: match[3] ? Number(match[3]) : null
+      };
+    }
+
+    function formatReceiptNumber(parsedReceipt, main, suffix = null) {
+      const mainNumber = String(main).padStart(parsedReceipt.mainWidth, "0");
+      return `${parsedReceipt.prefix}${mainNumber}${suffix === null ? "" : `-${suffix}`}`;
+    }
+
+    function createCancelledGapRecord(receiptNumber) {
+      return {
+        id: `cancelled-${receiptNumber}`,
+        document_date: "",
+        receipt_number: receiptNumber,
+        invoice_number: "ยกเลิก",
+        customer_name: "ยกเลิก",
+        document_status: "cancelled",
+        isCancelledGap: true
+      };
     }
 
     function addCancelledReceiptGaps(records) {
-      const parsedRecords = records
-        .map((record) => ({ record, parsed: parseReceiptSequence(record.receipt_number) }))
-        .filter((item) => item.parsed);
-      if (parsedRecords.length < 2) return records;
+      const sortedRecords = sortReceiptReportRecords(records);
+      const completedRecords = [];
+      let previousBaseParsed = null;
 
-      const sameSeries = parsedRecords.filter((item) => item.parsed.prefix === parsedRecords[0].parsed.prefix);
-      const numbers = new Map(sameSeries.map((item) => [item.parsed.sequence, item.record]));
-      const sequences = [...numbers.keys()].sort((a, b) => a - b);
-      const firstSequence = sequences[0];
-      const lastSequence = sequences[sequences.length - 1];
-      const { prefix, width } = sameSeries[0].parsed;
-      const completed = [];
+      sortedRecords.forEach((record) => {
+        const currentParsed = parseReceiptNumber(record.receipt_number);
 
-      for (let sequence = firstSequence; sequence <= lastSequence; sequence += 1) {
-        const existingRecord = numbers.get(sequence);
-        completed.push(existingRecord || {
-          document_date: "",
-          receipt_number: `${prefix}${String(sequence).padStart(width, "0")}`,
-          invoice_number: "ยกเลิก",
-          customer_name: "ยกเลิก",
-          isCancelledGap: true
-        });
-      }
+        if (currentParsed?.suffix === null) {
+          if (previousBaseParsed && previousBaseParsed.prefix === currentParsed.prefix && previousBaseParsed.main < currentParsed.main) {
+            for (let main = previousBaseParsed.main + 1; main < currentParsed.main; main += 1) {
+              completedRecords.push(createCancelledGapRecord(formatReceiptNumber(currentParsed, main)));
+            }
+          }
 
-      return completed;
+          previousBaseParsed = currentParsed;
+        }
+
+        completedRecords.push(record);
+      });
+
+      return completedRecords;
     }
 
     function renderSummary(records) {
@@ -417,6 +460,7 @@
           <td class="reference-number">${record.isCancelledGap ? "ยกเลิก" : escapeHtml(record.invoice_number)}</td>
           <td>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(record.customer_name)}</td>
           <td><span class="status-badge ${record.isCancelledGap ? "cancelled" : escapeHtml(record.document_status)}">${record.isCancelledGap ? "ยกเลิก" : escapeHtml(formatDocumentStatus(record.document_status))}</span></td>
+          <td>${record.isCancelledGap || !canEditInvoices ? "-" : `<a class="report-action" href="create-invoice-page.html?id=${encodeURIComponent(record.id)}&company=${encodeURIComponent(record.company_code || "YDS")}&return=report" title="แก้ไขใบกำกับภาษี"><i data-lucide="file-pen-line" aria-hidden="true"></i>แก้ไข</a>`}</td>
         </tr>
       `).join("");
 
@@ -428,9 +472,14 @@
             <dt>เลข RE</dt><dd>${escapeHtml(record.receipt_number)}</dd>
             <dt>อ้างอิง INV</dt><dd>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(record.invoice_number)}</dd>
             <dt>สถานะเอกสาร</dt><dd>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(formatDocumentStatus(record.document_status))}</dd>
+            ${record.isCancelledGap || !canEditInvoices ? "" : `<dt>จัดการ</dt><dd><a class="report-action" href="create-invoice-page.html?id=${encodeURIComponent(record.id)}&company=${encodeURIComponent(record.company_code || "YDS")}&return=report"><i data-lucide="file-pen-line" aria-hidden="true"></i>แก้ไขใบกำกับภาษี</a></dd>`}
           </dl>
         </article>
       `).join("");
+
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
     }
 
     async function loadReport() {
@@ -440,7 +489,7 @@
       savePdfButton.disabled = true;
 
       try {
-        actualReportRecords = await fetchReceiptReport({ year, month });
+        actualReportRecords = sortReceiptReportRecords(await fetchReceiptReport({ year, month }));
         reportRecords = addCancelledReceiptGaps(actualReportRecords);
         renderSummary(actualReportRecords);
         renderRows(reportRecords);
@@ -553,8 +602,13 @@
     yearFilter.addEventListener("change", loadReport);
     savePdfButton.addEventListener("click", savePdf);
 
-    renderSelectOptions();
-    loadReport();
+    async function initializeReport() {
+      canEditInvoices = ["yodsapong", "ntpbenz"].includes(await getYindAuthenticatedUsername());
+      renderSelectOptions();
+      await loadReport();
+    }
+
+    initializeReport();
   </script>
 </body>
 </html>
