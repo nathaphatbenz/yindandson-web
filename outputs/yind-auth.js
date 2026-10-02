@@ -28,7 +28,7 @@ async function getYindAuthenticatedUsername() {
 
 async function requireYindInvoiceEditor() {
   const username = await getYindAuthenticatedUsername();
-  if (username !== "yodsapong") {
+  if (!["yodsapong", "ntpbenz"].includes(username)) {
     throw new Error("ผู้ใช้งานนี้ไม่มีสิทธิ์แก้ไขใบกำกับภาษี");
   }
 
