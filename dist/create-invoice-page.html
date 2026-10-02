@@ -1687,8 +1687,10 @@
           statusText.textContent = `กำลังสร้าง${getCompanyReceiptDocumentType(getSelectedCompanyCode())} จากเอกสารเดิม`;
         } else {
           setDocumentType(record.document_type || DEFAULT_DOCUMENT_TYPE);
-          isTaxInvoiceEditLocked = Boolean(editingInvoiceId) && isReceiptDocument(record.document_type);
-          setReceiptSourceLocked(isTaxInvoiceEditLocked);
+          // Existing documents opened from Dashboard remain editable. The lock
+          // is only used while creating a new receipt from its source invoice.
+          isTaxInvoiceEditLocked = false;
+          setReceiptSourceLocked(false);
           if (currentSourceInvoiceId) {
             currentSourceInvoiceNumber = await fetchInvoiceNumberById(currentSourceInvoiceId);
           }

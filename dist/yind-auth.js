@@ -13,6 +13,28 @@ function getYindUsernameFromSession(session) {
     .find(([, authEmail]) => authEmail === email)?.[0] || "";
 }
 
+async function getYindAuthenticatedUsername() {
+  if (!window.supabase || !supabaseClient) {
+    return "";
+  }
+
+  const { data, error } = await supabaseClient.auth.getSession();
+  if (error || !data.session) {
+    return "";
+  }
+
+  return getYindUsernameFromSession(data.session);
+}
+
+async function requireYindInvoiceEditor() {
+  const username = await getYindAuthenticatedUsername();
+  if (!["yodsapong", "ntpbenz"].includes(username)) {
+    throw new Error("ผู้ใช้งานนี้ไม่มีสิทธิ์แก้ไขใบกำกับภาษี");
+  }
+
+  return username;
+}
+
 async function signInToYind(username, password) {
   const email = getYindAuthEmail(username);
   if (!email) {

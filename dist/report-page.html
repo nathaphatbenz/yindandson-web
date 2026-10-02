@@ -150,9 +150,6 @@
 
     .table-heading { justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid var(--line); }
     .table-heading p { margin: 3px 0 0; color: var(--muted); font-size: 0.9rem; }
-    .report-action { display: inline-flex; align-items: center; justify-content: center; min-height: 34px; gap: 6px; border: 1px solid #b8e2d8; border-radius: 7px; padding: 6px 9px; color: #067647; background: #ecfdf3; font: inherit; font-size: .8rem; font-weight: 800; text-decoration: none; white-space: nowrap; }
-    .report-action:hover { background: #d1fae5; }
-    .report-action svg { width: 15px; height: 15px; }
     .status { min-height: 22px; margin: 12px 0 0; color: var(--primary); font-weight: 700; }
     .table-wrap { overflow-x: auto; }
     table { width: 100%; min-width: 940px; border-collapse: collapse; }
@@ -292,7 +289,6 @@
               <th>อ้างอิงใบวางบิล</th>
               <th>ชื่อบริษัท</th>
               <th>สถานะเอกสาร</th>
-              <th>จัดการ</th>
             </tr>
           </thead>
           <tbody id="reportTableBody"></tbody>
@@ -335,7 +331,6 @@
     const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
     let reportRecords = [];
     let actualReportRecords = [];
-    let canEditInvoices = false;
 
     function escapeHtml(value) {
       return String(value || "")
@@ -460,7 +455,6 @@
           <td class="reference-number">${record.isCancelledGap ? "ยกเลิก" : escapeHtml(record.invoice_number)}</td>
           <td>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(record.customer_name)}</td>
           <td><span class="status-badge ${record.isCancelledGap ? "cancelled" : escapeHtml(record.document_status)}">${record.isCancelledGap ? "ยกเลิก" : escapeHtml(formatDocumentStatus(record.document_status))}</span></td>
-          <td>${record.isCancelledGap || !canEditInvoices ? "-" : `<a class="report-action" href="create-invoice-page.html?id=${encodeURIComponent(record.id)}&company=${encodeURIComponent(record.company_code || "YDS")}&return=report" title="แก้ไขใบกำกับภาษี"><i data-lucide="file-pen-line" aria-hidden="true"></i>แก้ไข</a>`}</td>
         </tr>
       `).join("");
 
@@ -472,14 +466,10 @@
             <dt>เลข RE</dt><dd>${escapeHtml(record.receipt_number)}</dd>
             <dt>อ้างอิง INV</dt><dd>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(record.invoice_number)}</dd>
             <dt>สถานะเอกสาร</dt><dd>${record.isCancelledGap ? "ยกเลิก" : escapeHtml(formatDocumentStatus(record.document_status))}</dd>
-            ${record.isCancelledGap || !canEditInvoices ? "" : `<dt>จัดการ</dt><dd><a class="report-action" href="create-invoice-page.html?id=${encodeURIComponent(record.id)}&company=${encodeURIComponent(record.company_code || "YDS")}&return=report"><i data-lucide="file-pen-line" aria-hidden="true"></i>แก้ไขใบกำกับภาษี</a></dd>`}
           </dl>
         </article>
       `).join("");
 
-      if (window.lucide) {
-        window.lucide.createIcons();
-      }
     }
 
     async function loadReport() {
@@ -603,7 +593,6 @@
     savePdfButton.addEventListener("click", savePdf);
 
     async function initializeReport() {
-      canEditInvoices = ["yodsapong", "ntpbenz"].includes(await getYindAuthenticatedUsername());
       renderSelectOptions();
       await loadReport();
     }
