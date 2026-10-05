@@ -1051,6 +1051,8 @@
         cheque: "เช็ค ..........................................",
         receiverProduct: "ผู้รับสินค้า",
         senderProduct: "ผู้ส่งสินค้า",
+        receiverBilling: "ผู้รับวางบิล",
+        senderBilling: "ผู้วางบิล",
         companySignature: "ในนาม บริษัท ยินดีแอนด์ซันส์ จำกัด",
         receiverMoney: "ผู้รับเงิน",
         signatureDate: "วันที่",
@@ -1090,6 +1092,8 @@
         cheque: "Cheque ..........................................",
         receiverProduct: "Receiver",
         senderProduct: "Delivered by",
+        receiverBilling: "Bill recipient",
+        senderBilling: "Bill issuer",
         companySignature: "For Yindee and Sons Co., Ltd.",
         receiverMoney: "Received by",
         signatureDate: "Date",
@@ -2145,8 +2149,8 @@
           </div>`
         : isBillingLikeDocument
         ? `<div class="signature signature-billing">
-            <div>${labels.receiverProduct}</div>
-            <div>${labels.senderProduct}</div>
+            <div>${labels.receiverBilling}</div>
+            <div>${labels.senderBilling}</div>
             <div>${escapeHtml(companySignature)}</div>
           </div>`
         : `<div class="signature"><div>${labels.receiverMoney}</div><div>${labels.signatureDate}</div></div>`;
