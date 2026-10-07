@@ -1228,13 +1228,40 @@
     async function loadInvoiceRecords() {
       const keyword = searchInput.value.trim().toLowerCase();
       const result = await fetchInvoices({
-        keyword,
+        // Load the complete company set first. A search such as INV01-106
+        // must also include its linked RE document, whose number is different.
+        keyword: "",
         page: 1,
         pageSize: 1000,
         companyCode: selectedCompanyCode
       });
 
-      invoiceRecords = result.data;
+      const records = result.data || [];
+      if (!keyword) {
+        invoiceRecords = records;
+        return;
+      }
+
+      const matchingIds = new Set(records
+        .filter((record) => {
+          const searchable = [record.customer_name, getDocumentNumberValue(record)]
+            .join(" ")
+            .toLowerCase();
+          return searchable.includes(keyword);
+        })
+        .map((record) => record.id));
+
+      const relatedIds = new Set(matchingIds);
+      records.forEach((record) => {
+        if (matchingIds.has(record.id) && record.source_invoice_id) {
+          relatedIds.add(record.source_invoice_id);
+        }
+        if (record.source_invoice_id && matchingIds.has(record.source_invoice_id)) {
+          relatedIds.add(record.id);
+        }
+      });
+
+      invoiceRecords = records.filter((record) => relatedIds.has(record.id));
     }
 
     function updateCompanyActions() {
