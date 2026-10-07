@@ -1647,21 +1647,18 @@
       const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       const imgData = canvas.toDataURL("image/png");
 
-      let remainingHeight = imgHeight;
-      let y = 0;
-      pdf.addImage(imgData, "PNG", 0, y, imgWidth, imgHeight);
-      remainingHeight -= pageHeight;
-
-      while (remainingHeight > 0) {
-        y -= pageHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, y, imgWidth, imgHeight);
-        remainingHeight -= pageHeight;
-      }
+      // Fit the complete report inside one A4 page so the preview never creates a second page.
+      const pageMargin = 18;
+      const widthScale = (pageWidth - pageMargin * 2) / canvas.width;
+      const heightScale = (pageHeight - pageMargin * 2) / canvas.height;
+      const scale = Math.min(widthScale, heightScale);
+      const imgWidth = canvas.width * scale;
+      const imgHeight = canvas.height * scale;
+      const x = (pageWidth - imgWidth) / 2;
+      const y = (pageHeight - imgHeight) / 2;
+      pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
 
       return pdf.output("blob");
     }
