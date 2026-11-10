@@ -1419,7 +1419,7 @@
           </div>
           <div class="result-actions">
             <button class="secondary load-record" type="button" data-id="${row.id}">นำมาแก้ไข</button>
-            <button class="secondary save-record-pdf" type="button" data-id="${row.id}">บันทึกไฟล์ PDF</button>
+            <button class="secondary save-record-image" type="button" data-id="${row.id}">บันทึกรูป</button>
             <button class="danger-button delete-record" type="button" data-id="${row.id}">ลบข้อมูล</button>
           </div>
         </div>
@@ -1493,9 +1493,8 @@
       return cleaned || "work-list";
     }
 
-    async function createRecordPdfBlob(record) {
+    async function createRecordBlob(record, outputType = "pdf") {
       const { default: html2canvas } = await import("https://esm.sh/html2canvas@1.4.1");
-      const { jsPDF } = await import("https://esm.sh/jspdf@2.5.1");
       const workItems = record.work_items || [];
       const expenseItems = record.expense_items || [];
 
@@ -1644,6 +1643,19 @@
       });
       report.remove();
 
+      if (outputType === "image") {
+        return new Promise((resolve, reject) => {
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error("สร้างไฟล์รูปไม่สำเร็จ"));
+              return;
+            }
+            resolve(blob);
+          }, "image/png");
+        });
+      }
+
+      const { jsPDF } = await import("https://esm.sh/jspdf@2.5.1");
       const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
@@ -1663,29 +1675,29 @@
       return pdf.output("blob");
     }
 
-    async function saveRecordPdf(id) {
+    async function saveRecordImage(id) {
       try {
         const record = lastSearchRows.find((row) => row.id === id);
         if (!record) {
-          databaseStatus.textContent = "ไม่พบข้อมูลที่ต้องการบันทึกเป็น PDF";
+          databaseStatus.textContent = "ไม่พบข้อมูลที่ต้องการบันทึกรูป";
           return;
         }
 
-        databaseStatus.textContent = "กำลังสร้างไฟล์ PDF...";
-        const blob = await createRecordPdfBlob(record);
+        databaseStatus.textContent = "กำลังสร้างไฟล์รูป...";
+        const blob = await createRecordBlob(record, "image");
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `${safeDownloadName(record.registration || record.id)}.pdf`;
+        link.download = `${safeDownloadName(record.registration || record.id)}.png`;
         document.body.appendChild(link);
         link.click();
         link.remove();
         URL.revokeObjectURL(url);
-        databaseStatus.textContent = "บันทึกไฟล์ PDF แล้ว";
-        showToast("บันทึกไฟล์ PDF แล้ว");
+        databaseStatus.textContent = "บันทึกรูปแล้ว";
+        showToast("บันทึกรูปแล้ว");
       } catch (error) {
-        databaseStatus.textContent = error.message || "บันทึกไฟล์ PDF ไม่สำเร็จ";
-        showToast(error.message || "บันทึกไฟล์ PDF ไม่สำเร็จ", "error");
+        databaseStatus.textContent = error.message || "บันทึกรูปไม่สำเร็จ";
+        showToast(error.message || "บันทึกรูปไม่สำเร็จ", "error");
       }
     }
 
@@ -1699,7 +1711,7 @@
         }
 
         databaseStatus.textContent = "กำลังเตรียมตัวอย่าง PDF...";
-        const blob = await createRecordPdfBlob(record);
+        const blob = await createRecordBlob(record);
         previewUrl = URL.createObjectURL(blob);
         document.querySelector("#workRecordPdfPreviewOverlay")?.remove();
 
@@ -2089,9 +2101,9 @@
         return;
       }
 
-      const savePdfButton = event.target.closest(".save-record-pdf");
-      if (savePdfButton) {
-        previewRecordPdf(savePdfButton.dataset.id);
+      const saveImageButton = event.target.closest(".save-record-image");
+      if (saveImageButton) {
+        saveRecordImage(saveImageButton.dataset.id);
       }
     });
     itemsBody.addEventListener("input", updateTotals);
